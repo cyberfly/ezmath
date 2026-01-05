@@ -148,6 +148,34 @@
         <h2 class="text-2xl font-bold text-purple-600 mb-6">Choose Your Game</h2>
 
         <div class="space-y-4">
+          <!-- Darab Mode (Multiplication Tables) -->
+          <button
+            @click="selectedMode = 'sifir'; view = 'settings'"
+            class="w-full p-5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg hover:shadow-xl"
+          >
+            <div class="flex items-center gap-4">
+              <span class="text-4xl">✖️</span>
+              <div class="text-left">
+                <div class="font-bold text-xl">Darab</div>
+                <div class="text-amber-200 text-sm">Master multiplication tables 1-12!</div>
+              </div>
+            </div>
+          </button>
+
+          <!-- Bahagi Mode (Division Tables) -->
+          <button
+            @click="selectedMode = 'bahagi'; view = 'settings'"
+            class="w-full p-5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600 transition-all shadow-lg hover:shadow-xl"
+          >
+            <div class="flex items-center gap-4">
+              <span class="text-4xl">➗</span>
+              <div class="text-left">
+                <div class="font-bold text-xl">Bahagi</div>
+                <div class="text-emerald-200 text-sm">Master division tables 1-12!</div>
+              </div>
+            </div>
+          </button>
+
           <!-- Practice Mode -->
           <button
             @click="selectedMode = 'practice'; view = 'settings'"
@@ -189,20 +217,6 @@
               </div>
             </div>
           </button>
-
-          <!-- Darab Mode (Multiplication Tables) -->
-          <button
-            @click="selectedMode = 'sifir'; view = 'settings'"
-            class="w-full p-5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg hover:shadow-xl"
-          >
-            <div class="flex items-center gap-4">
-              <span class="text-4xl">✖️</span>
-              <div class="text-left">
-                <div class="font-bold text-xl">Darab</div>
-                <div class="text-amber-200 text-sm">Master multiplication tables 1-12!</div>
-              </div>
-            </div>
-          </button>
         </div>
 
         <!-- Quick Stats -->
@@ -233,10 +247,11 @@
           <span x-show="selectedMode === 'timed'">⏱️ Timed Challenge</span>
           <span x-show="selectedMode === 'level'">🏆 Level Mode</span>
           <span x-show="selectedMode === 'sifir'">✖️ Darab Mode</span>
+          <span x-show="selectedMode === 'bahagi'">➗ Bahagi Mode</span>
         </h2>
 
-        <!-- Difficulty (not for level or sifir mode) -->
-        <div x-show="selectedMode !== 'level' && selectedMode !== 'sifir'" class="mb-6">
+        <!-- Difficulty (not for level, sifir, or bahagi mode) -->
+        <div x-show="selectedMode !== 'level' && selectedMode !== 'sifir' && selectedMode !== 'bahagi'" class="mb-6">
           <h3 class="font-bold text-gray-700 mb-3">Difficulty</h3>
           <div class="flex gap-2">
             <template x-for="(config, key) in DIFFICULTY_CONFIG" :key="key">
@@ -250,8 +265,8 @@
           </div>
         </div>
 
-        <!-- Operations (not for level or sifir mode) -->
-        <div x-show="selectedMode !== 'level' && selectedMode !== 'sifir'" class="mb-6">
+        <!-- Operations (not for level, sifir, or bahagi mode) -->
+        <div x-show="selectedMode !== 'level' && selectedMode !== 'sifir' && selectedMode !== 'bahagi'" class="mb-6">
           <h3 class="font-bold text-gray-700 mb-3">Operations</h3>
           <div class="flex gap-2 justify-center">
             <template x-for="(symbol, op) in OPERATION_SYMBOLS" :key="op">
@@ -303,18 +318,30 @@
           </p>
         </div>
 
+        <!-- Bahagi Mode Info -->
+        <div x-show="selectedMode === 'bahagi'" class="mb-6 bg-emerald-50 p-4 rounded-xl">
+          <p class="text-gray-600">
+            Master division tables from 1 to 12! Start with Bahagi 1 (1÷1 to 12÷1),
+            then progress to Bahagi 2, and so on.
+          </p>
+          <p class="mt-2 text-gray-600">
+            Questions are randomized. Wrong answers repeat until you get them all correct!
+          </p>
+        </div>
+
         <button @click="startGame()" class="btn w-full text-xl py-4"
           :class="{
             'btn-primary': selectedMode === 'practice',
             'btn-secondary': selectedMode === 'timed',
             'btn-pink': selectedMode === 'level',
             'bg-amber-500 hover:bg-amber-600': selectedMode === 'sifir',
-            'opacity-50 cursor-not-allowed': selectedMode !== 'level' && selectedMode !== 'sifir' && selectedOperations.length === 0
+            'bg-emerald-500 hover:bg-emerald-600': selectedMode === 'bahagi',
+            'opacity-50 cursor-not-allowed': selectedMode !== 'level' && selectedMode !== 'sifir' && selectedMode !== 'bahagi' && selectedOperations.length === 0
           }"
-          :disabled="selectedMode !== 'level' && selectedMode !== 'sifir' && selectedOperations.length === 0"
+          :disabled="selectedMode !== 'level' && selectedMode !== 'sifir' && selectedMode !== 'bahagi' && selectedOperations.length === 0"
         >
-          <span x-show="selectedMode !== 'level' && selectedMode !== 'sifir' && selectedOperations.length === 0">Select an operation</span>
-          <span x-show="selectedMode === 'level' || selectedMode === 'sifir' || selectedOperations.length > 0">Start! 🚀</span>
+          <span x-show="selectedMode !== 'level' && selectedMode !== 'sifir' && selectedMode !== 'bahagi' && selectedOperations.length === 0">Select an operation</span>
+          <span x-show="selectedMode === 'level' || selectedMode === 'sifir' || selectedMode === 'bahagi' || selectedOperations.length > 0">Start! 🚀</span>
         </button>
       </div>
     </div>
@@ -343,7 +370,13 @@
             <!-- Darab mode: show current table -->
             <div x-show="$store.game.mode === 'sifir'" class="flex items-center gap-2 bg-amber-100 px-4 py-2 rounded-full">
               <span class="text-2xl">✖️</span>
-              <span class="font-bold text-xl text-amber-600">Darab <span x-text="$store.game.currentDarab"></span></span>
+              <span class="font-bold text-xl text-amber-600">Darab <span x-text="$store.game.currentSifir"></span></span>
+            </div>
+
+            <!-- Bahagi mode: show current table -->
+            <div x-show="$store.game.mode === 'bahagi'" class="flex items-center gap-2 bg-emerald-100 px-4 py-2 rounded-full">
+              <span class="text-2xl">➗</span>
+              <span class="font-bold text-xl text-emerald-600">Bahagi <span x-text="$store.game.currentBahagi"></span></span>
             </div>
           </div>
 
@@ -376,6 +409,19 @@
           </div>
         </div>
 
+        <!-- Progress for bahagi mode -->
+        <div x-show="$store.game.mode === 'bahagi'" class="mb-4">
+          <div class="progress-bar">
+            <div class="progress-bar-fill bg-gradient-to-r from-emerald-500 to-teal-500" :style="'width: ' + $store.game.bahagiProgress + '%'"></div>
+          </div>
+          <div class="text-sm text-gray-500 mt-1">
+            <span x-text="$store.game.bahagiQuestionsRemaining"></span> questions remaining
+            <span x-show="$store.game.bahagiWrongQuestions.length > 0" class="text-emerald-600">
+              (<span x-text="$store.game.bahagiWrongQuestions.length"></span> to retry)
+            </span>
+          </div>
+        </div>
+
         <!-- Problem Display -->
         <div class="py-8" :class="{ 'animate-shake': $store.game.showFeedback && $store.game.lastResult === 'incorrect' }">
           <div class="text-6xl font-bold mb-8 flex items-center justify-center gap-4"
@@ -396,13 +442,13 @@
             <input
               type="number"
               x-model="$store.game.userAnswer"
-              @keyup.enter="$store.game.mode === 'sifir' ? $store.game.submitDarabAnswer() : $store.game.submitAnswer()"
+              @keyup.enter="$store.game.mode === 'sifir' ? $store.game.submitSifirAnswer() : ($store.game.mode === 'bahagi' ? $store.game.submitBahagiAnswer() : $store.game.submitAnswer())"
               x-effect="if (!$store.game.showFeedback && $store.game.isPlaying) $nextTick(() => $el.focus())"
               class="answer-input"
               placeholder="?"
             />
             <button
-              @click="$store.game.mode === 'sifir' ? $store.game.submitDarabAnswer() : $store.game.submitAnswer()"
+              @click="$store.game.mode === 'sifir' ? $store.game.submitSifirAnswer() : ($store.game.mode === 'bahagi' ? $store.game.submitBahagiAnswer() : $store.game.submitAnswer())"
               class="btn btn-success text-2xl px-8"
               :disabled="!$store.game.userAnswer"
             >
@@ -447,7 +493,9 @@
           <span x-show="$store.game.mode === 'level' && $store.game.correctInLevel < $store.game.levelPassThreshold">Keep Practicing!</span>
           <span x-show="$store.game.mode === 'practice'">Great Practice!</span>
           <span x-show="$store.game.mode === 'sifir' && $store.game.sifirCompleted">🏆 All Darab Mastered!</span>
-          <span x-show="$store.game.mode === 'sifir' && !$store.game.sifirCompleted">✖️ Darab <span x-text="$store.game.currentDarab"></span> Complete!</span>
+          <span x-show="$store.game.mode === 'sifir' && !$store.game.sifirCompleted">✖️ Darab <span x-text="$store.game.currentSifir"></span> Complete!</span>
+          <span x-show="$store.game.mode === 'bahagi' && $store.game.bahagiCompleted">🏆 All Bahagi Mastered!</span>
+          <span x-show="$store.game.mode === 'bahagi' && !$store.game.bahagiCompleted">➗ Bahagi <span x-text="$store.game.currentBahagi"></span> Complete!</span>
         </h2>
 
         <div class="text-6xl my-6">

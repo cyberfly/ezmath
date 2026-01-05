@@ -77,6 +77,15 @@ function createGameStore(Alpine) {
       return this.sifirQuestions.length - this.sifirCurrentIndex + this.sifirWrongQuestions.length
     },
 
+    get bahagiProgress() {
+      if (this.bahagiQuestions.length === 0) return 0
+      return Math.round((this.bahagiCurrentIndex / this.bahagiQuestions.length) * 100)
+    },
+
+    get bahagiQuestionsRemaining() {
+      return this.bahagiQuestions.length - this.bahagiCurrentIndex + this.bahagiWrongQuestions.length
+    },
+
     // Methods
     startGame(mode, settings = {}) {
       this.mode = mode
@@ -105,13 +114,19 @@ function createGameStore(Alpine) {
         this.currentSifir = settings.startSifir || 1
         this.sifirCompleted = false
         this.initSifirQuestions()
+      } else if (mode === 'bahagi') {
+        this.currentBahagi = settings.startBahagi || 1
+        this.bahagiCompleted = false
+        this.initBahagiQuestions()
       }
 
       sounds.start()
-      if (mode !== 'sifir') {
-        this.nextProblem()
-      } else {
+      if (mode === 'sifir') {
         this.nextSifirProblem()
+      } else if (mode === 'bahagi') {
+        this.nextBahagiProblem()
+      } else {
+        this.nextProblem()
       }
     },
 
@@ -346,6 +361,92 @@ function createGameStore(Alpine) {
         this.currentSifir++
         this.initSifirQuestions()
         this.nextSifirProblem()
+      }
+    },
+
+    // Bahagi mode methods
+    initBahagiQuestions() {
+      // Generate all questions for current bahagi (n÷n through 12n÷n)
+      const questions = []
+      for (let i = 1; i <= 12; i++) {
+        questions.push({
+          num1: this.currentBahagi * i,
+          num2: this.currentBahagi,
+          answer: i,
+          operation: 'divide',
+          symbol: '÷',
+          difficulty: 'bahagi'
+        })
+      }
+      // Shuffle questions
+      this.bahagiQuestions = this.shuffleArray(questions)
+      this.bahagiWrongQuestions = []
+      this.bahagiCurrentIndex = 0
+    },
+
+    nextBahagiProblem() {
+      if (this.bahagiCurrentIndex < this.bahagiQuestions.length) {
+        // Still have questions in current set
+        this.currentProblem = this.bahagiQuestions[this.bahagiCurrentIndex]
+      } else if (this.bahagiWrongQuestions.length > 0) {
+        // All questions done but have wrong ones to repeat
+        this.bahagiQuestions = this.shuffleArray(this.bahagiWrongQuestions)
+        this.bahagiWrongQuestions = []
+        this.bahagiCurrentIndex = 0
+        this.currentProblem = this.bahagiQuestions[0]
+      } else {
+        // All correct! Move to next bahagi
+        this.advanceToNextBahagi()
+        return
+      }
+      this.userAnswer = ''
+      this.showFeedback = false
+    },
+
+    submitBahagiAnswer() {
+      if (!this.userAnswer || !this.currentProblem) return
+
+      const isCorrect = parseInt(this.userAnswer) === this.currentProblem.answer
+
+      this.problemsAttempted++
+      this.lastResult = isCorrect ? 'correct' : 'incorrect'
+      this.showFeedback = true
+
+      if (isCorrect) {
+        this.correctAnswers++
+        this.score += 10 * this.currentBahagi // Higher bahagi = more points
+        sounds.correct()
+      } else {
+        // Add to wrong questions for repeat later
+        this.bahagiWrongQuestions.push(this.currentProblem)
+        sounds.wrong()
+      }
+
+      // Update profile stats (use 'medium' difficulty for bahagi tracking)
+      Alpine.store('profile').updateStats('divide', 'medium', isCorrect)
+
+      // Move to next question
+      this.bahagiCurrentIndex++
+
+      setTimeout(() => {
+        if (this.isPlaying) {
+          this.nextBahagiProblem()
+        }
+      }, isCorrect ? 500 : 1000)
+    },
+
+    advanceToNextBahagi() {
+      if (this.currentBahagi >= 12) {
+        // Completed all bahagi!
+        this.bahagiCompleted = true
+        sounds.levelUp()
+        this.endGame()
+      } else {
+        // Move to next bahagi
+        sounds.levelUp()
+        this.currentBahagi++
+        this.initBahagiQuestions()
+        this.nextBahagiProblem()
       }
     },
 
