@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧮</text></svg>" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EzMath - Fun Math for Kids!</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <script type="module" crossorigin src="/ezmath/assets/index-DyyNIPMZ.js"></script>
+  <link rel="stylesheet" crossorigin href="/ezmath/assets/index-CEkL2jgb.css">
+</head>
+<body>
+  <div id="app" x-data="{
+    view: 'home',
+    showCreateProfile: false,
+    newProfileName: '',
+    newProfileAvatar: '🦊',
+
+    // Game settings
+    selectedMode: null,
+    selectedDifficulty: 'easy',
+    selectedOperations: ['add', 'subtract'],
+    selectedTime: 60,
+
+    toggleOperation(op) {
+      const idx = this.selectedOperations.indexOf(op);
+      if (idx > -1) {
+        // Allow deselecting even if it's the only one - can select just one topic
+        this.selectedOperations.splice(idx, 1);
+      } else {
+        this.selectedOperations.push(op);
+      }
+    },
+
+    startGame() {
+      $store.game.startGame(this.selectedMode, {
+        difficulty: this.selectedDifficulty,
+        operations: this.selectedOperations,
+        timeLimit: this.selectedTime,
+        startLevel: 1
+      });
+      this.view = 'game';
+    },
+
+    goHome() {
+      $store.game.reset();
+      this.view = 'menu';
+    }
+  }">
+
+    <!-- Profile Selection Screen -->
+    <div x-show="view === 'home'" x-cloak class="min-h-screen flex items-center justify-center p-4">
+      <div class="card max-w-md w-full text-center">
+        <h1 class="text-4xl font-extrabold text-purple-600 mb-2">🧮 EzMath</h1>
+        <p class="text-gray-500 mb-6">Fun math practice for everyone!</p>
+
+        <!-- Existing Profiles -->
+        <template x-if="$store.profile.hasProfiles && !showCreateProfile">
+          <div>
+            <h2 class="text-xl font-bold text-gray-700 mb-4">Who's playing?</h2>
+            <div class="space-y-3 mb-6">
+              <template x-for="profile in $store.profile.profiles" :key="profile.id">
+                <button
+                  @click="$store.profile.selectProfile(profile.id); view = 'menu'"
+                  class="w-full flex items-center gap-4 p-4 rounded-2xl bg-purple-50 hover:bg-purple-100 transition-all border-2 border-transparent hover:border-purple-300"
+                >
+                  <span class="text-4xl" x-text="profile.avatar"></span>
+                  <div class="text-left flex-1">
+                    <div class="font-bold text-lg text-gray-800" x-text="profile.name"></div>
+                    <div class="text-sm text-gray-500">
+                      <span x-text="profile.stats.totalProblems"></span> problems solved
+                    </div>
+                  </div>
+                  <span class="text-purple-400">→</span>
+                </button>
+              </template>
+            </div>
+            <button @click="showCreateProfile = true" class="btn btn-secondary w-full">
+              + Add Player
+            </button>
+          </div>
+        </template>
+
+        <!-- Create Profile Form -->
+        <template x-if="!$store.profile.hasProfiles || showCreateProfile">
+          <div>
+            <h2 class="text-xl font-bold text-gray-700 mb-4" x-text="$store.profile.hasProfiles ? 'Add New Player' : 'Create Your Profile'"></h2>
+
+            <div class="mb-4">
+              <input
+                type="text"
+                x-model="newProfileName"
+                placeholder="Your name"
+                class="w-full px-4 py-3 text-lg rounded-xl border-2 border-purple-200 focus:border-purple-500 focus:outline-none text-center"
+                maxlength="20"
+              />
+            </div>
+
+            <div class="mb-6">
+              <p class="text-sm text-gray-500 mb-2">Pick your avatar:</p>
+              <div class="flex flex-wrap justify-center gap-2">
+                <template x-for="avatar in AVATARS" :key="avatar">
+                  <button
+                    @click="newProfileAvatar = avatar"
+                    class="avatar-btn"
+                    :class="{ 'selected': newProfileAvatar === avatar }"
+                    x-text="avatar"
+                  ></button>
+                </template>
+              </div>
+            </div>
+
+            <div class="flex gap-3">
+              <button
+                x-show="$store.profile.hasProfiles"
+                @click="showCreateProfile = false"
+                class="btn bg-gray-300 hover:bg-gray-400 flex-1"
+              >
+                Cancel
+              </button>
+              <button
+                @click="if(newProfileName.trim()) { $store.profile.createProfile(newProfileName, newProfileAvatar); newProfileName = ''; showCreateProfile = false; view = 'menu'; }"
+                :disabled="!newProfileName.trim()"
+                class="btn btn-primary flex-1"
+                :class="{ 'opacity-50 cursor-not-allowed': !newProfileName.trim() }"
+              >
+                Let's Go!
+              </button>
+            </div>
+          </div>
+        </template>
+      </div>
+    </div>
+
+    <!-- Main Menu -->
+    <div x-show="view === 'menu'" x-cloak class="min-h-screen flex items-center justify-center p-4">
+      <div class="card max-w-md w-full text-center">
+        <!-- Profile Header -->
+        <div class="flex items-center justify-between mb-6">
+          <button @click="view = 'home'" class="text-2xl hover:scale-110 transition-transform">←</button>
+          <div class="flex items-center gap-2">
+            <span class="text-3xl" x-text="$store.profile.activeProfile?.avatar"></span>
+            <span class="font-bold text-lg" x-text="$store.profile.activeProfile?.name"></span>
+          </div>
+          <button @click="view = 'stats'" class="text-2xl hover:scale-110 transition-transform">📊</button>
+        </div>
+
+        <h2 class="text-2xl font-bold text-purple-600 mb-6">Choose Your Game</h2>
+
+        <div class="space-y-4">
+          <!-- Practice Mode -->
+          <button
+            @click="selectedMode = 'practice'; view = 'settings'"
+            class="w-full p-5 rounded-2xl bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-102"
+          >
+            <div class="flex items-center gap-4">
+              <span class="text-4xl">🎯</span>
+              <div class="text-left">
+                <div class="font-bold text-xl">Practice</div>
+                <div class="text-purple-200 text-sm">No time limit, just learn!</div>
+              </div>
+            </div>
+          </button>
+
+          <!-- Timed Challenge -->
+          <button
+            @click="selectedMode = 'timed'; view = 'settings'"
+            class="w-full p-5 rounded-2xl bg-gradient-to-r from-cyan-500 to-cyan-600 text-white hover:from-cyan-600 hover:to-cyan-700 transition-all shadow-lg hover:shadow-xl"
+          >
+            <div class="flex items-center gap-4">
+              <span class="text-4xl">⏱️</span>
+              <div class="text-left">
+                <div class="font-bold text-xl">Timed Challenge</div>
+                <div class="text-cyan-200 text-sm">Race against the clock!</div>
+              </div>
+            </div>
+          </button>
+
+          <!-- Level Mode -->
+          <button
+            @click="selectedMode = 'level'; view = 'settings'"
+            class="w-full p-5 rounded-2xl bg-gradient-to-r from-pink-500 to-pink-600 text-white hover:from-pink-600 hover:to-pink-700 transition-all shadow-lg hover:shadow-xl"
+          >
+            <div class="flex items-center gap-4">
+              <span class="text-4xl">🏆</span>
+              <div class="text-left">
+                <div class="font-bold text-xl">Level Up</div>
+                <div class="text-pink-200 text-sm">Progress through levels!</div>
+              </div>
+            </div>
+          </button>
+
+          <!-- Darab Mode (Multiplication Tables) -->
+          <button
+            @click="selectedMode = 'sifir'; view = 'settings'"
+            class="w-full p-5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg hover:shadow-xl"
+          >
+            <div class="flex items-center gap-4">
+              <span class="text-4xl">✖️</span>
+              <div class="text-left">
+                <div class="font-bold text-xl">Darab</div>
+                <div class="text-amber-200 text-sm">Master multiplication tables 1-12!</div>
+              </div>
+            </div>
+          </button>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="mt-6 pt-6 border-t-2 border-purple-100 grid grid-cols-3 gap-4 text-center">
+          <div>
+            <div class="text-2xl font-bold text-purple-600" x-text="$store.profile.activeProfile?.stats.totalProblems || 0"></div>
+            <div class="text-xs text-gray-500">Solved</div>
+          </div>
+          <div>
+            <div class="text-2xl font-bold text-green-500" x-text="$store.profile.getAccuracy() + '%'"></div>
+            <div class="text-xs text-gray-500">Accuracy</div>
+          </div>
+          <div>
+            <div class="text-2xl font-bold text-orange-500" x-text="$store.profile.activeProfile?.stats.bestStreak || 0"></div>
+            <div class="text-xs text-gray-500">Best Streak</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Game Settings -->
+    <div x-show="view === 'settings'" x-cloak class="min-h-screen flex items-center justify-center p-4">
+      <div class="card max-w-md w-full">
+        <button @click="view = 'menu'" class="text-2xl mb-4 hover:scale-110 transition-transform">←</button>
+
+        <h2 class="text-2xl font-bold text-purple-600 mb-6 text-center">
+          <span x-show="selectedMode === 'practice'">🎯 Practice Settings</span>
+          <span x-show="selectedMode === 'timed'">⏱️ Timed Challenge</span>
+          <span x-show="selectedMode === 'level'">🏆 Level Mode</span>
+          <span x-show="selectedMode === 'sifir'">✖️ Darab Mode</span>
+        </h2>
+
+        <!-- Difficulty (not for level or sifir mode) -->
+        <div x-show="selectedMode !== 'level' && selectedMode !== 'sifir'" class="mb-6">
+          <h3 class="font-bold text-gray-700 mb-3">Difficulty</h3>
+          <div class="flex gap-2">
+            <template x-for="(config, key) in DIFFICULTY_CONFIG" :key="key">
+              <button
+                @click="selectedDifficulty = key"
+                class="flex-1 py-3 px-2 rounded-xl font-bold transition-all text-sm"
+                :class="selectedDifficulty === key ? 'bg-purple-500 text-white' : 'bg-purple-100 text-purple-600 hover:bg-purple-200'"
+                x-text="key.charAt(0).toUpperCase() + key.slice(1)"
+              ></button>
+            </template>
+          </div>
+        </div>
+
+        <!-- Operations (not for level or sifir mode) -->
+        <div x-show="selectedMode !== 'level' && selectedMode !== 'sifir'" class="mb-6">
+          <h3 class="font-bold text-gray-700 mb-3">Operations</h3>
+          <div class="flex gap-2 justify-center">
+            <template x-for="(symbol, op) in OPERATION_SYMBOLS" :key="op">
+              <button
+                @click="toggleOperation(op)"
+                class="w-14 h-14 rounded-xl text-2xl font-bold transition-all"
+                :class="selectedOperations.includes(op) ? 'bg-purple-500 text-white' : 'bg-purple-100 text-purple-600 hover:bg-purple-200'"
+                x-text="symbol"
+              ></button>
+            </template>
+          </div>
+        </div>
+
+        <!-- Time Limit (timed mode only) -->
+        <div x-show="selectedMode === 'timed'" class="mb-6">
+          <h3 class="font-bold text-gray-700 mb-3">Time Limit</h3>
+          <div class="flex gap-2">
+            <template x-for="time in [60, 90, 120]" :key="time">
+              <button
+                @click="selectedTime = time"
+                class="flex-1 py-3 rounded-xl font-bold transition-all"
+                :class="selectedTime === time ? 'bg-cyan-500 text-white' : 'bg-cyan-100 text-cyan-600 hover:bg-cyan-200'"
+              >
+                <span x-text="time"></span>s
+              </button>
+            </template>
+          </div>
+        </div>
+
+        <!-- Level Mode Info -->
+        <div x-show="selectedMode === 'level'" class="mb-6 bg-pink-50 p-4 rounded-xl">
+          <p class="text-gray-600">
+            Start at Level 1 and work your way up! Get 8 out of 10 correct to advance.
+            Difficulty increases as you progress.
+          </p>
+          <p class="mt-2 text-sm text-gray-500">
+            Levels unlocked: <span class="font-bold text-pink-600" x-text="$store.profile.activeProfile?.stats.levelsUnlocked || 1"></span>
+          </p>
+        </div>
+
+        <!-- Darab Mode Info -->
+        <div x-show="selectedMode === 'sifir'" class="mb-6 bg-amber-50 p-4 rounded-xl">
+          <p class="text-gray-600">
+            Master multiplication tables from 1 to 12! Start with Darab 1 (1×1 to 1×12),
+            then progress to Darab 2, and so on.
+          </p>
+          <p class="mt-2 text-gray-600">
+            Questions are randomized. Wrong answers repeat until you get them all correct!
+          </p>
+        </div>
+
+        <button @click="startGame()" class="btn w-full text-xl py-4"
+          :class="{
+            'btn-primary': selectedMode === 'practice',
+            'btn-secondary': selectedMode === 'timed',
+            'btn-pink': selectedMode === 'level',
+            'bg-amber-500 hover:bg-amber-600': selectedMode === 'sifir',
+            'opacity-50 cursor-not-allowed': selectedMode !== 'level' && selectedMode !== 'sifir' && selectedOperations.length === 0
+          }"
+          :disabled="selectedMode !== 'level' && selectedMode !== 'sifir' && selectedOperations.length === 0"
+        >
+          <span x-show="selectedMode !== 'level' && selectedMode !== 'sifir' && selectedOperations.length === 0">Select an operation</span>
+          <span x-show="selectedMode === 'level' || selectedMode === 'sifir' || selectedOperations.length > 0">Start! 🚀</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div x-show="view === 'game'" x-cloak class="min-h-screen flex items-center justify-center p-4">
+      <div class="card max-w-lg w-full text-center">
+        <!-- Game Header -->
+        <div class="flex items-center justify-between mb-6">
+          <button @click="goHome()" class="text-2xl hover:scale-110 transition-transform">✕</button>
+
+          <!-- Mode-specific info -->
+          <div class="flex items-center gap-4">
+            <!-- Timed mode: show timer -->
+            <div x-show="$store.game.mode === 'timed'" class="flex items-center gap-2 bg-cyan-100 px-4 py-2 rounded-full">
+              <span class="text-2xl">⏱️</span>
+              <span class="font-bold text-xl text-cyan-600" x-text="$store.game.formattedTime"></span>
+            </div>
+
+            <!-- Level mode: show level -->
+            <div x-show="$store.game.mode === 'level'" class="flex items-center gap-2 bg-pink-100 px-4 py-2 rounded-full">
+              <span class="text-2xl">🏆</span>
+              <span class="font-bold text-xl text-pink-600">Level <span x-text="$store.game.currentLevel"></span></span>
+            </div>
+
+            <!-- Darab mode: show current table -->
+            <div x-show="$store.game.mode === 'sifir'" class="flex items-center gap-2 bg-amber-100 px-4 py-2 rounded-full">
+              <span class="text-2xl">✖️</span>
+              <span class="font-bold text-xl text-amber-600">Darab <span x-text="$store.game.currentDarab"></span></span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 bg-purple-100 px-4 py-2 rounded-full">
+            <span class="text-xl">⭐</span>
+            <span class="font-bold text-lg text-purple-600" x-text="$store.game.score"></span>
+          </div>
+        </div>
+
+        <!-- Progress bar for level mode -->
+        <div x-show="$store.game.mode === 'level'" class="mb-4">
+          <div class="progress-bar">
+            <div class="progress-bar-fill" :style="'width: ' + $store.game.levelProgress + '%'"></div>
+          </div>
+          <div class="text-sm text-gray-500 mt-1">
+            <span x-text="$store.game.correctInLevel"></span>/<span x-text="$store.game.levelPassThreshold"></span> correct
+          </div>
+        </div>
+
+        <!-- Progress for sifir mode -->
+        <div x-show="$store.game.mode === 'sifir'" class="mb-4">
+          <div class="progress-bar">
+            <div class="progress-bar-fill bg-gradient-to-r from-amber-500 to-orange-500" :style="'width: ' + $store.game.sifirProgress + '%'"></div>
+          </div>
+          <div class="text-sm text-gray-500 mt-1">
+            <span x-text="$store.game.sifirQuestionsRemaining"></span> questions remaining
+            <span x-show="$store.game.sifirWrongQuestions.length > 0" class="text-amber-600">
+              (<span x-text="$store.game.sifirWrongQuestions.length"></span> to retry)
+            </span>
+          </div>
+        </div>
+
+        <!-- Problem Display -->
+        <div class="py-8" :class="{ 'animate-shake': $store.game.showFeedback && $store.game.lastResult === 'incorrect' }">
+          <div class="text-6xl font-bold mb-8 flex items-center justify-center gap-4"
+               :class="{
+                 'animate-bounce-in': $store.game.currentProblem,
+                 'text-green-500': $store.game.showFeedback && $store.game.lastResult === 'correct',
+                 'text-red-500': $store.game.showFeedback && $store.game.lastResult === 'incorrect'
+               }">
+            <span x-text="$store.game.currentProblem?.num1"></span>
+            <span class="text-purple-400" x-text="$store.game.currentProblem?.symbol"></span>
+            <span x-text="$store.game.currentProblem?.num2"></span>
+            <span class="text-gray-400">=</span>
+            <span x-text="$store.game.showFeedback ? $store.game.currentProblem?.answer : '?'" class="text-purple-600"></span>
+          </div>
+
+          <!-- Answer Input -->
+          <div x-show="!$store.game.showFeedback" class="flex items-center justify-center gap-4">
+            <input
+              type="number"
+              x-model="$store.game.userAnswer"
+              @keyup.enter="$store.game.mode === 'sifir' ? $store.game.submitDarabAnswer() : $store.game.submitAnswer()"
+              x-effect="if (!$store.game.showFeedback && $store.game.isPlaying) $nextTick(() => $el.focus())"
+              class="answer-input"
+              placeholder="?"
+            />
+            <button
+              @click="$store.game.mode === 'sifir' ? $store.game.submitDarabAnswer() : $store.game.submitAnswer()"
+              class="btn btn-success text-2xl px-8"
+              :disabled="!$store.game.userAnswer"
+            >
+              ✓
+            </button>
+          </div>
+
+          <!-- Feedback -->
+          <div x-show="$store.game.showFeedback" class="text-4xl">
+            <span x-show="$store.game.lastResult === 'correct'" class="text-green-500">✓ Great!</span>
+            <span x-show="$store.game.lastResult === 'incorrect'" class="text-red-500">✗ Try again!</span>
+          </div>
+        </div>
+
+        <!-- Stats Bar -->
+        <div class="flex justify-center gap-8 text-center border-t-2 border-purple-100 pt-4">
+          <div>
+            <div class="text-2xl font-bold text-gray-700" x-text="$store.game.correctAnswers"></div>
+            <div class="text-xs text-gray-500">Correct</div>
+          </div>
+          <div>
+            <div class="text-2xl font-bold text-gray-700" x-text="$store.game.problemsAttempted"></div>
+            <div class="text-xs text-gray-500">Attempted</div>
+          </div>
+          <div>
+            <div class="text-2xl font-bold"
+                 :class="$store.game.accuracy >= 80 ? 'text-green-500' : ($store.game.accuracy >= 50 ? 'text-yellow-500' : 'text-red-500')"
+                 x-text="$store.game.accuracy + '%'"></div>
+            <div class="text-xs text-gray-500">Accuracy</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results Screen -->
+    <div x-show="view === 'game' && !$store.game.isPlaying && $store.game.problemsAttempted > 0" x-cloak
+         class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+      <div class="card max-w-md w-full text-center animate-bounce-in">
+        <h2 class="text-3xl font-bold text-purple-600 mb-2">
+          <span x-show="$store.game.mode === 'timed'">⏱️ Time's Up!</span>
+          <span x-show="$store.game.mode === 'level' && $store.game.correctInLevel >= $store.game.levelPassThreshold">🎉 Level Complete!</span>
+          <span x-show="$store.game.mode === 'level' && $store.game.correctInLevel < $store.game.levelPassThreshold">Keep Practicing!</span>
+          <span x-show="$store.game.mode === 'practice'">Great Practice!</span>
+          <span x-show="$store.game.mode === 'sifir' && $store.game.sifirCompleted">🏆 All Darab Mastered!</span>
+          <span x-show="$store.game.mode === 'sifir' && !$store.game.sifirCompleted">✖️ Darab <span x-text="$store.game.currentDarab"></span> Complete!</span>
+        </h2>
+
+        <div class="text-6xl my-6">
+          <span x-show="$store.game.accuracy >= 80">🌟</span>
+          <span x-show="$store.game.accuracy >= 50 && $store.game.accuracy < 80">👍</span>
+          <span x-show="$store.game.accuracy < 50">💪</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mb-6">
+          <div class="bg-purple-50 p-4 rounded-xl">
+            <div class="text-3xl font-bold text-purple-600" x-text="$store.game.score"></div>
+            <div class="text-sm text-gray-500">Points</div>
+          </div>
+          <div class="bg-green-50 p-4 rounded-xl">
+            <div class="text-3xl font-bold text-green-500" x-text="$store.game.accuracy + '%'"></div>
+            <div class="text-sm text-gray-500">Accuracy</div>
+          </div>
+          <div class="bg-blue-50 p-4 rounded-xl">
+            <div class="text-3xl font-bold text-blue-500" x-text="$store.game.correctAnswers"></div>
+            <div class="text-sm text-gray-500">Correct</div>
+          </div>
+          <div class="bg-orange-50 p-4 rounded-xl">
+            <div class="text-3xl font-bold text-orange-500" x-text="$store.game.problemsAttempted"></div>
+            <div class="text-sm text-gray-500">Total</div>
+          </div>
+        </div>
+
+        <div class="flex gap-3">
+          <button @click="goHome()" class="btn bg-gray-300 hover:bg-gray-400 flex-1">
+            Menu
+          </button>
+          <button @click="startGame()" class="btn btn-primary flex-1">
+            Play Again
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Screen -->
+    <div x-show="view === 'stats'" x-cloak class="min-h-screen p-4 py-8">
+      <div class="max-w-md mx-auto">
+        <div class="card mb-4">
+          <div class="flex items-center justify-between mb-4">
+            <button @click="view = 'menu'" class="text-2xl hover:scale-110 transition-transform">←</button>
+            <h2 class="text-xl font-bold text-purple-600">📊 Your Stats</h2>
+            <div></div>
+          </div>
+
+          <div class="flex items-center gap-4 mb-6 pb-4 border-b-2 border-purple-100">
+            <span class="text-5xl" x-text="$store.profile.activeProfile?.avatar"></span>
+            <div>
+              <div class="font-bold text-xl" x-text="$store.profile.activeProfile?.name"></div>
+              <div class="text-gray-500 text-sm">Playing since <span x-text="new Date($store.profile.activeProfile?.createdAt).toLocaleDateString()"></span></div>
+            </div>
+          </div>
+
+          <!-- Overall Stats -->
+          <div class="grid grid-cols-2 gap-3 mb-6">
+            <div class="bg-purple-50 p-3 rounded-xl text-center">
+              <div class="text-2xl font-bold text-purple-600" x-text="$store.profile.activeProfile?.stats.totalProblems || 0"></div>
+              <div class="text-xs text-gray-500">Problems Solved</div>
+            </div>
+            <div class="bg-green-50 p-3 rounded-xl text-center">
+              <div class="text-2xl font-bold text-green-500" x-text="$store.profile.getAccuracy() + '%'"></div>
+              <div class="text-xs text-gray-500">Overall Accuracy</div>
+            </div>
+            <div class="bg-orange-50 p-3 rounded-xl text-center">
+              <div class="text-2xl font-bold text-orange-500" x-text="$store.profile.activeProfile?.stats.bestStreak || 0"></div>
+              <div class="text-xs text-gray-500">Best Streak</div>
+            </div>
+            <div class="bg-pink-50 p-3 rounded-xl text-center">
+              <div class="text-2xl font-bold text-pink-500" x-text="$store.profile.activeProfile?.stats.levelsUnlocked || 1"></div>
+              <div class="text-xs text-gray-500">Levels Unlocked</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- By Operation -->
+        <div class="card mb-4">
+          <h3 class="font-bold text-gray-700 mb-3">By Operation</h3>
+          <div class="space-y-2">
+            <template x-for="(symbol, op) in OPERATION_SYMBOLS" :key="op">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-lg font-bold text-purple-600" x-text="symbol"></div>
+                <div class="flex-1">
+                  <div class="flex justify-between text-sm mb-1">
+                    <span class="capitalize" x-text="op === 'add' ? 'Addition' : (op === 'subtract' ? 'Subtraction' : (op === 'multiply' ? 'Multiplication' : 'Division'))"></span>
+                    <span x-text="$store.profile.getAccuracy(op) + '%'"></span>
+                  </div>
+                  <div class="progress-bar h-2">
+                    <div class="progress-bar-fill" :style="'width: ' + $store.profile.getAccuracy(op) + '%'"></div>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <!-- High Scores -->
+        <div class="card">
+          <h3 class="font-bold text-gray-700 mb-3">High Scores</h3>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="bg-cyan-50 p-3 rounded-xl text-center">
+              <div class="text-2xl font-bold text-cyan-600" x-text="$store.profile.activeProfile?.stats.highScores.timed || 0"></div>
+              <div class="text-xs text-gray-500">⏱️ Timed Best</div>
+            </div>
+            <div class="bg-pink-50 p-3 rounded-xl text-center">
+              <div class="text-2xl font-bold text-pink-600" x-text="'Level ' + ($store.profile.activeProfile?.stats.highScores.level || 1)"></div>
+              <div class="text-xs text-gray-500">🏆 Level Best</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>
