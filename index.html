@@ -17,8 +17,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="/ezmath/assets/index-YHWQoCtW.js"></script>
-  <link rel="stylesheet" crossorigin href="/ezmath/assets/index-_zRLTV2j.css">
+  <script type="module" crossorigin src="/ezmath/assets/index-K9HEwPcr.js"></script>
+  <link rel="stylesheet" crossorigin href="/ezmath/assets/index-BgMZKJ2O.css">
 </head>
 <body>
   <div id="app" x-data="{}" x-init="$store.profile.activeProfile?.equippedItems?.theme && Themes.applyTheme($store.profile.activeProfile.equippedItems.theme)">
@@ -388,6 +388,101 @@
           </p>
         </div>
 
+        <!-- Previous Sessions -->
+        <div x-data="{
+          sessions: $store.profile.getIncompleteSessionsByMode($store.view.selectedMode),
+          formatTime(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+
+            if (diffMins < 1) return 'Just now';
+            if (diffMins < 60) return `${diffMins}m ago`;
+            if (diffHours < 24) return `${diffHours}h ago`;
+            return `${diffDays}d ago`;
+          }
+        }"
+        x-init="sessions = $store.profile.getIncompleteSessionsByMode($store.view.selectedMode)"
+        class="mb-6">
+          <template x-if="sessions.length > 0">
+            <div>
+              <h3 class="font-bold text-gray-700 mb-3 flex items-center gap-2">
+                <span>📋</span>
+                <span>Resume Previous Session</span>
+              </h3>
+              <div class="space-y-2">
+                <template x-for="session in sessions.slice(0, 3)" :key="session.gameId">
+                  <div class="bg-gray-50 rounded-xl p-4 border-2 border-gray-200 hover:border-purple-300 transition-all">
+                    <div class="flex items-center justify-between mb-2">
+                      <div class="flex items-center gap-2">
+                        <span class="text-xs font-mono text-gray-400" x-text="'#' + session.gameId.slice(-6)"></span>
+                        <span class="text-xs text-gray-500" x-text="formatTime(session.lastUpdated)"></span>
+                      </div>
+                      <button
+                        @click="$store.profile.deleteSession(session.gameId); sessions = $store.profile.getIncompleteSessionsByMode($store.view.selectedMode)"
+                        class="text-red-400 hover:text-red-600 text-sm"
+                        title="Delete session"
+                      >
+                        ✕
+                      </button>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2 mb-3 text-center text-xs">
+                      <div>
+                        <div class="font-bold text-purple-600" x-text="session.score || 0"></div>
+                        <div class="text-gray-500">Score</div>
+                      </div>
+                      <div>
+                        <div class="font-bold text-green-600" x-text="session.correctAnswers || 0"></div>
+                        <div class="text-gray-500">Correct</div>
+                      </div>
+                      <div>
+                        <div class="font-bold text-blue-600" x-text="(session.accuracy || 0) + '%'"></div>
+                        <div class="text-gray-500">Accuracy</div>
+                      </div>
+                    </div>
+
+                    <!-- Mode-specific info -->
+                    <div class="text-xs text-gray-600 mb-3">
+                      <template x-if="$store.view.selectedMode === 'sifir'">
+                        <span>Darab <span x-text="session.currentSifir"></span></span>
+                      </template>
+                      <template x-if="$store.view.selectedMode === 'bahagi'">
+                        <span>Bahagi <span x-text="session.currentBahagi"></span></span>
+                      </template>
+                      <template x-if="$store.view.selectedMode === 'tambah'">
+                        <span class="capitalize" x-text="session.currentTambahDifficulty + ' Level'"></span>
+                      </template>
+                      <template x-if="$store.view.selectedMode === 'tolak'">
+                        <span class="capitalize" x-text="session.currentTolakDifficulty + ' Level'"></span>
+                      </template>
+                      <template x-if="$store.view.selectedMode === 'level'">
+                        <span>Level <span x-text="session.currentLevel"></span></span>
+                      </template>
+                      <template x-if="$store.view.selectedMode === 'timed'">
+                        <span><span x-text="session.timeRemaining"></span>s remaining</span>
+                      </template>
+                    </div>
+
+                    <button
+                      @click="$store.game.resumeSession(session.gameId); $store.view.current = 'game'"
+                      class="w-full bg-purple-500 hover:bg-purple-600 text-white text-sm py-2 px-4 rounded-lg font-bold transition-colors"
+                    >
+                      Resume Session
+                    </button>
+                  </div>
+                </template>
+              </div>
+              <div class="mt-3 pt-3 border-t-2 border-gray-100 text-center">
+                <div class="text-sm text-gray-500">or</div>
+              </div>
+            </div>
+          </template>
+        </div>
+
         <button @click="$store.view.startGame()" class="btn w-full text-xl py-4"
           :class="{
             'btn-primary': $store.view.selectedMode === 'practice',
@@ -402,7 +497,7 @@
           :disabled="($store.view.selectedMode === 'practice' || $store.view.selectedMode === 'timed') && $store.view.selectedOperations.length === 0"
         >
           <span x-show="($store.view.selectedMode === 'practice' || $store.view.selectedMode === 'timed') && $store.view.selectedOperations.length === 0">Select an operation</span>
-          <span x-show="$store.view.selectedMode === 'level' || $store.view.selectedMode === 'sifir' || $store.view.selectedMode === 'bahagi' || $store.view.selectedMode === 'tambah' || $store.view.selectedMode === 'tolak' || $store.view.selectedOperations.length > 0">Start! 🚀</span>
+          <span x-show="$store.view.selectedMode === 'level' || $store.view.selectedMode === 'sifir' || $store.view.selectedMode === 'bahagi' || $store.view.selectedMode === 'tambah' || $store.view.selectedMode === 'tolak' || $store.view.selectedOperations.length > 0">Start New Session 🚀</span>
         </button>
       </div>
     </div>
@@ -462,6 +557,14 @@
               <span class="text-xl">📊</span>
               <span class="font-bold text-lg text-purple-600" x-text="$store.game.score"></span>
             </div>
+          </div>
+        </div>
+
+        <!-- Game ID Display -->
+        <div class="mb-4 text-center">
+          <div class="inline-flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-full">
+            <span class="text-xs text-gray-500">Game ID:</span>
+            <span class="text-xs font-mono text-gray-700" x-text="$store.game.gameId"></span>
           </div>
         </div>
 
