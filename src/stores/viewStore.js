@@ -45,9 +45,8 @@ function createViewStore(Alpine) {
       this.current = 'game'
     },
 
-    // Reset to home
+    // Navigate back to menu without clearing game state
     goHome() {
-      Alpine.store('game').reset()
       this.current = 'menu'
     }
   }
