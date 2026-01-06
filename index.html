@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="/ezmath/assets/index-B00R7QL_.js"></script>
+  <script type="module" crossorigin src="/ezmath/assets/index-DGmlPZSm.js"></script>
   <link rel="stylesheet" crossorigin href="/ezmath/assets/index-BD9H39hF.css">
 </head>
 <body>
@@ -155,7 +155,7 @@
           <div class="flex items-center gap-4">
             <div class="text-6xl" x-text="PetSystem.getPetEmoji($store.profile.activeProfile?.pet?.stage || 0)"></div>
             <div class="flex-1">
-              <div class="font-bold text-lg text-purple-700" x-text="($store.profile.activeProfile?.pet?.name || 'Buddy')"></div>
+              <div class="font-bold text-lg text-purple-700" x-text="($store.profile.activeProfile?.pet?.name || 'Nora')"></div>
               <div class="text-sm text-purple-600" x-text="PetSystem.getPetMessage($store.profile.activeProfile?.pet?.stage || 0)"></div>
               <div class="mt-2">
                 <div class="h-2 bg-purple-200 rounded-full overflow-hidden">
@@ -729,16 +729,16 @@
               class="text-sm"
               :class="$store.game.showFeedback && $store.game.lastResult === 'incorrect' ? 'text-red-500' : 'text-gray-500'"
               x-text="$store.game.showFeedback && $store.game.lastResult === 'incorrect'
-                ? ($store.profile.activeProfile?.pet?.name || 'Buddy') + ' feels sad...'
-                : ($store.profile.activeProfile?.pet?.name || 'Buddy') + ' is cheering you on!'"
+                ? ($store.profile.activeProfile?.pet?.name || 'Nora') + ' feels sad...'
+                : ($store.profile.activeProfile?.pet?.name || 'Nora') + ' is cheering you on!'"
             ></div>
           </div>
           <div x-show="$store.game.petDevolved" class="text-xs text-red-500 mt-1">
-            😿 <span x-text="$store.profile.activeProfile?.pet?.name || 'Buddy'"></span> devolved to
+            😿 <span x-text="$store.profile.activeProfile?.pet?.name || 'Nora'"></span> devolved to
             <span x-text="PetSystem.getPetStageName($store.game.petDevolutionData?.newStage || 0)"></span>.
           </div>
           <div x-show="$store.game.petDevolutionWarning && !$store.game.petDevolved" class="text-xs text-amber-600 mt-1"
-               x-text="'⚠️ ' + ($store.profile.activeProfile?.pet?.name || 'Buddy') + ' is ' + ($store.game.petDevolutionWarning?.mistakesRemaining || 1) + ' mistake' + (($store.game.petDevolutionWarning?.mistakesRemaining || 1) === 1 ? '' : 's') + ' away from devolving.'">
+               x-text="'⚠️ ' + ($store.profile.activeProfile?.pet?.name || 'Nora') + ' is ' + ($store.game.petDevolutionWarning?.mistakesRemaining || 1) + ' mistake' + (($store.game.petDevolutionWarning?.mistakesRemaining || 1) === 1 ? '' : 's') + ' away from devolving.'">
           </div>
         </div>
 
@@ -817,7 +817,7 @@
             Pet Evolved!
           </div>
           <div class="text-pink-100 text-lg">
-            <span x-text="($store.profile.activeProfile?.pet?.name || 'Buddy')"></span> is now a
+            <span x-text="($store.profile.activeProfile?.pet?.name || 'Nora')"></span> is now a
             <span x-text="PetSystem.getPetStageName($store.game.petEvolutionData?.newStage || 0)"></span>!
           </div>
         </div>
@@ -897,9 +897,9 @@
             <!-- Pet Name (editable) -->
             <div x-show="!editingName" class="mb-2">
               <div class="text-2xl font-bold text-purple-700 inline-flex items-center gap-2">
-                <span x-text="$store.profile.activeProfile?.pet?.name || 'Buddy'"></span>
+                <span x-text="$store.profile.activeProfile?.pet?.name || 'Nora'"></span>
                 <button
-                  @click="editingName = true; newPetName = $store.profile.activeProfile?.pet?.name || 'Buddy'"
+                  @click="editingName = true; newPetName = $store.profile.activeProfile?.pet?.name || 'Nora'"
                   class="text-sm text-purple-500 hover:text-purple-700"
                 >
                   📝 Edit
@@ -960,7 +960,7 @@
             <div
               x-show="($store.profile.activeProfile?.pet?.stage || 0) > 0 && ($store.profile.activeProfile?.pet?.devolutionRisk || 0) >= (PetSystem.DEVOLUTION_THRESHOLD - 1)"
               class="text-xs text-amber-600 mt-2 text-center"
-              x-text="'⚠️ ' + ($store.profile.activeProfile?.pet?.name || 'Buddy') + ' is ' + Math.max(0, PetSystem.DEVOLUTION_THRESHOLD - ($store.profile.activeProfile?.pet?.devolutionRisk || 0)) + ' mistake' + (Math.max(0, PetSystem.DEVOLUTION_THRESHOLD - ($store.profile.activeProfile?.pet?.devolutionRisk || 0)) === 1 ? '' : 's') + ' away from devolving.'"
+              x-text="'⚠️ ' + ($store.profile.activeProfile?.pet?.name || 'Nora') + ' is ' + Math.max(0, PetSystem.DEVOLUTION_THRESHOLD - ($store.profile.activeProfile?.pet?.devolutionRisk || 0)) + ' mistake' + (Math.max(0, PetSystem.DEVOLUTION_THRESHOLD - ($store.profile.activeProfile?.pet?.devolutionRisk || 0)) === 1 ? '' : 's') + ' away from devolving.'"
             ></div>
           </div>
 
@@ -979,7 +979,7 @@
           <!-- Interaction Buttons -->
           <div class="space-y-3">
             <button
-              @click="if ($store.profile.feedPet()) { alert('🍕 ' + ($store.profile.activeProfile?.pet?.name || 'Buddy') + ' enjoyed the treat!') }"
+              @click="if ($store.profile.feedPet()) { alert('🍕 ' + ($store.profile.activeProfile?.pet?.name || 'Nora') + ' enjoyed the treat!') }"
               :disabled="($store.profile.activeProfile?.stats.stars || 0) < 10"
               class="w-full btn transition-all"
               :class="($store.profile.activeProfile?.stats.stars || 0) >= 10 ? 'bg-amber-500 hover:bg-amber-600 text-white' : 'bg-gray-300 text-gray-500 cursor-not-allowed'"
@@ -989,7 +989,7 @@
             </button>
 
             <button
-              @click="if ($store.profile.playWithPet()) { alert('🎮 You played with ' + ($store.profile.activeProfile?.pet?.name || 'Buddy') + '!') }"
+              @click="if ($store.profile.playWithPet()) { alert('🎮 You played with ' + ($store.profile.activeProfile?.pet?.name || 'Nora') + '!') }"
               :disabled="($store.profile.activeProfile?.stats.stars || 0) < 5"
               class="w-full btn transition-all"
               :class="($store.profile.activeProfile?.stats.stars || 0) >= 5 ? 'bg-purple-500 hover:bg-purple-600 text-white' : 'bg-gray-300 text-gray-500 cursor-not-allowed'"
