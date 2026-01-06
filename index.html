@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="/ezmath/assets/index-CsdOFRLI.js"></script>
+  <script type="module" crossorigin src="/ezmath/assets/index-CmlgQysk.js"></script>
   <link rel="stylesheet" crossorigin href="/ezmath/assets/index-_zRLTV2j.css">
 </head>
 <body>
@@ -587,14 +587,16 @@
           <div x-show="!$store.game.showFeedback" class="flex items-center justify-center gap-4">
             <input
               type="number"
+              inputmode="numeric"
               x-model="$store.game.userAnswer"
+              x-ref="answerInput"
+              x-init="$store.game.registerInput($refs.answerInput)"
               @keyup.enter="
                 $store.game.mode === 'sifir' ? $store.game.submitSifirAnswer() :
                 ($store.game.mode === 'bahagi' ? $store.game.submitBahagiAnswer() :
                 ($store.game.mode === 'tambah' ? $store.game.submitTambahAnswer() :
                 ($store.game.mode === 'tolak' ? $store.game.submitTolakAnswer() :
                 $store.game.submitAnswer())))"
-              x-effect="if (!$store.game.showFeedback && $store.game.isPlaying) $nextTick(() => $el.focus())"
               class="answer-input"
               placeholder="?"
             />
