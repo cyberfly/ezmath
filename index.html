@@ -717,10 +717,19 @@
           <div class="flex items-center justify-center gap-2">
             <div
               class="text-3xl transition-transform"
-              :class="{ 'animate-bounce': $store.game.showFeedback && $store.game.lastResult === 'correct' }"
+              :class="{
+                'animate-bounce': $store.game.showFeedback && $store.game.lastResult === 'correct',
+                'animate-hurt': $store.game.showFeedback && $store.game.lastResult === 'incorrect'
+              }"
               x-text="PetSystem.getPetEmoji($store.profile.activeProfile?.pet?.stage || 0)"
             ></div>
-            <div class="text-sm text-gray-500" x-text="($store.profile.activeProfile?.pet?.name || 'Buddy') + ' is cheering you on!'"></div>
+            <div
+              class="text-sm"
+              :class="$store.game.showFeedback && $store.game.lastResult === 'incorrect' ? 'text-red-500' : 'text-gray-500'"
+              x-text="$store.game.showFeedback && $store.game.lastResult === 'incorrect'
+                ? ($store.profile.activeProfile?.pet?.name || 'Buddy') + ' feels sad...'
+                : ($store.profile.activeProfile?.pet?.name || 'Buddy') + ' is cheering you on!'"
+            ></div>
           </div>
         </div>
 
