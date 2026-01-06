@@ -1,6 +1,8 @@
 // Sound effects using Web Audio API
 // No external files needed - generates tones programmatically
 
+import { playCorrectSound } from './soundPacks.js'
+
 let audioContext = null
 
 function getAudioContext() {
@@ -8,6 +10,20 @@ function getAudioContext() {
     audioContext = new (window.AudioContext || window.webkitAudioContext)()
   }
   return audioContext
+}
+
+// Get the equipped sound pack from the active profile
+function getEquippedSoundPack() {
+  try {
+    const profiles = JSON.parse(localStorage.getItem('ezmath_profiles') || '[]')
+    const activeId = localStorage.getItem('ezmath_active_profile')
+    if (!activeId) return 'classic'
+
+    const profile = profiles.find(p => p.id === activeId?.replace(/"/g, ''))
+    return profile?.equippedItems?.soundPack || 'classic'
+  } catch (e) {
+    return 'classic'
+  }
 }
 
 function playTone(frequency, duration, type = 'sine', volume = 0.3) {
@@ -40,11 +56,9 @@ function playNotes(notes, baseTime = 0.15) {
 const sounds = {
   // Pleasant rising chime for correct answers
   correct() {
-    playNotes([
-      { freq: 523.25, duration: 0.1 },  // C5
-      { freq: 659.25, duration: 0.1 },  // E5
-      { freq: 783.99, duration: 0.15 }, // G5
-    ], 0.08)
+    const packId = getEquippedSoundPack()
+    const ctx = getAudioContext()
+    playCorrectSound(packId, ctx)
   },
 
   // Soft, gentle buzz for wrong answers (not discouraging)

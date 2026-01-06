@@ -65,6 +65,22 @@ function createGameStore(Alpine) {
     lastResult: null, // 'correct' or 'incorrect'
     showFeedback: false,
 
+    // Currency tracking for current session
+    starsEarned: 0,
+    starBreakdown: {
+      base: 0,
+      streakBonus: 0,
+      accuracyBonus: 0,
+      completionBonus: 0
+    },
+
+    // Pet evolution tracking
+    petEvolved: false,
+    petEvolutionData: null,
+
+    // Milestone tracking
+    milestonesAchieved: [],
+
     // Computed
     get accuracy() {
       return this.problemsAttempted > 0
@@ -133,6 +149,16 @@ function createGameStore(Alpine) {
       this.userAnswer = ''
       this.lastResult = null
       this.showFeedback = false
+      this.starsEarned = 0
+      this.starBreakdown = {
+        base: 0,
+        streakBonus: 0,
+        accuracyBonus: 0,
+        completionBonus: 0
+      }
+      this.petEvolved = false
+      this.petEvolutionData = null
+      this.milestonesAchieved = []
 
       if (mode === 'timed') {
         this.timeRemaining = this.timeLimit
@@ -192,6 +218,12 @@ function createGameStore(Alpine) {
       if (isCorrect) {
         this.correctAnswers++
         this.score += this.getPointsForProblem()
+
+        // Calculate and add stars
+        const starsForProblem = this.calculateStarsForProblem(isCorrect)
+        this.starsEarned += starsForProblem
+        this.starBreakdown.base += starsForProblem
+
         sounds.correct()
       } else {
         sounds.wrong()
@@ -238,6 +270,25 @@ function createGameStore(Alpine) {
       return 10 * difficultyMultiplier[this.difficulty] * opMultiplier[this.currentProblem.operation]
     },
 
+    calculateStarsForProblem(isCorrect) {
+      if (!isCorrect) return 0
+
+      const difficultyMultiplier = {
+        easy: 1,
+        medium: 1.5,
+        hard: 2
+      }
+      const opMultiplier = {
+        add: 1,
+        subtract: 1,
+        multiply: 1.5,
+        divide: 1.5
+      }
+
+      const difficulty = this.currentProblem.difficulty || this.difficulty
+      return Math.round(5 * difficultyMultiplier[difficulty] * opMultiplier[this.currentProblem.operation])
+    },
+
     startTimer() {
       this.timerInterval = setInterval(() => {
         if (!this.isPaused) {
@@ -270,6 +321,51 @@ function createGameStore(Alpine) {
       if (this.timerInterval) {
         clearInterval(this.timerInterval)
         this.timerInterval = null
+      }
+
+      // Calculate bonuses
+      if (this.problemsAttempted > 0) {
+        // Accuracy bonus
+        if (this.accuracy >= 80) {
+          this.starBreakdown.accuracyBonus = 50
+        } else if (this.accuracy >= 60) {
+          this.starBreakdown.accuracyBonus = 25
+        } else if (this.accuracy >= 50) {
+          this.starBreakdown.accuracyBonus = 10
+        }
+
+        // Completion bonus
+        if (this.mode === 'practice' && this.problemsAttempted >= 10) {
+          this.starBreakdown.completionBonus = 30
+        } else if (this.mode === 'timed') {
+          this.starBreakdown.completionBonus = 40
+        } else if (this.mode === 'level' && this.correctInLevel >= this.levelPassThreshold) {
+          this.starBreakdown.completionBonus = 60
+        }
+
+        // Add all bonuses to total stars
+        this.starsEarned += this.starBreakdown.accuracyBonus +
+                           this.starBreakdown.completionBonus +
+                           this.starBreakdown.streakBonus
+
+        // Award stars to profile
+        Alpine.store('profile').addStars(this.starsEarned, 'session')
+
+        // Update pet XP (1 XP per problem attempted)
+        Alpine.store('profile').updatePetXP(this.problemsAttempted)
+
+        // Check for pet evolution
+        const evolutionResult = Alpine.store('profile').checkPetEvolution()
+        if (evolutionResult && evolutionResult.evolved) {
+          this.petEvolved = true
+          this.petEvolutionData = evolutionResult
+        }
+
+        // Check for milestones
+        const newMilestones = Alpine.store('profile').checkAndAwardMilestones()
+        if (newMilestones && newMilestones.length > 0) {
+          this.milestonesAchieved = newMilestones
+        }
       }
 
       sounds.gameOver()
@@ -373,6 +469,12 @@ function createGameStore(Alpine) {
       if (isCorrect) {
         this.correctAnswers++
         this.score += 10 * this.currentSifir // Higher sifir = more points
+
+        // Calculate stars (5 base × 1.5 medium × 1.5 multiply = 11 stars, rounded)
+        const starsForProblem = Math.round(5 * 1.5 * 1.5)
+        this.starsEarned += starsForProblem
+        this.starBreakdown.base += starsForProblem
+
         sounds.correct()
       } else {
         // Add to wrong questions for repeat later
@@ -459,6 +561,12 @@ function createGameStore(Alpine) {
       if (isCorrect) {
         this.correctAnswers++
         this.score += 10 * this.currentBahagi // Higher bahagi = more points
+
+        // Calculate stars (5 base × 1.5 medium × 1.5 divide = 11 stars, rounded)
+        const starsForProblem = Math.round(5 * 1.5 * 1.5)
+        this.starsEarned += starsForProblem
+        this.starBreakdown.base += starsForProblem
+
         sounds.correct()
       } else {
         // Add to wrong questions for repeat later
