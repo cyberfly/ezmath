@@ -79,7 +79,7 @@ function createProfileStore(Alpine) {
         },
         // Pet system
         pet: {
-          name: 'Buddy',
+          name: 'Nora',
           stage: 0, // 0=egg, 1=baby, 2=kid, 3=teen, 4=adult
           xp: 0,
           devolutionRisk: 0,
@@ -231,7 +231,7 @@ function createProfileStore(Alpine) {
       // Initialize pet if it doesn't exist (for old profiles)
       if (!profile.pet) {
         profile.pet = {
-          name: 'Buddy',
+          name: 'Nora',
           stage: 0,
           xp: 0,
           devolutionRisk: 0,
@@ -254,7 +254,7 @@ function createProfileStore(Alpine) {
       if (!profile) return
 
       this.initializePet()
-      profile.pet.name = name.trim() || 'Buddy'
+      profile.pet.name = name.trim() || 'Nora'
     },
 
     updatePetXP(amount) {
