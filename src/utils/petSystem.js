@@ -38,8 +38,16 @@ const PET_STAGES = [
     stage: 4,
     name: 'Adult',
     emoji: '🦅',
-    message: 'Your Math Buddy has fully evolved!',
+    message: 'Your Math Buddy is fully grown!',
     minProblems: 500,
+    maxProblems: 999
+  },
+  {
+    stage: 5,
+    name: 'Legendary',
+    emoji: '🐉',
+    message: 'Your Math Buddy has reached legendary status!',
+    minProblems: 1000,
     maxProblems: Infinity
   }
 ]
@@ -99,7 +107,7 @@ function getEvolutionProgress(totalProblems) {
     totalProblems >= s.minProblems && totalProblems <= s.maxProblems
   )
 
-  if (!currentStageData || currentStageData.stage === 4) {
+  if (!currentStageData || currentStageData.stage === PET_STAGES.length - 1) {
     return 100 // Max level reached
   }
 
@@ -115,7 +123,7 @@ function getProblemsToNextEvolution(totalProblems) {
     totalProblems >= s.minProblems && totalProblems <= s.maxProblems
   )
 
-  if (!currentStageData || currentStageData.stage === 4) {
+  if (!currentStageData || currentStageData.stage === PET_STAGES.length - 1) {
     return 0 // Max level reached
   }
 

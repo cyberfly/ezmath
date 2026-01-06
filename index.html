@@ -1011,8 +1011,15 @@
               <div class="flex items-center gap-3 p-2 rounded-lg" :class="($store.profile.activeProfile?.pet?.stage || 0) === 4 ? 'bg-purple-100' : ''">
                 <span class="text-2xl">🦅</span>
                 <div>
-                  <div class="font-bold">Adult (500+ problems)</div>
-                  <div class="text-xs text-gray-500">Fully evolved!</div>
+                  <div class="font-bold">Adult (500-999 problems)</div>
+                  <div class="text-xs text-gray-500">Fully grown!</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-3 p-2 rounded-lg" :class="($store.profile.activeProfile?.pet?.stage || 0) === 5 ? 'bg-purple-100' : ''">
+                <span class="text-2xl">🐉</span>
+                <div>
+                  <div class="font-bold">Legendary (1000+ problems)</div>
+                  <div class="text-xs text-gray-500">Dragon power!</div>
                 </div>
               </div>
             </div>
