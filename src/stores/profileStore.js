@@ -30,7 +30,9 @@ function createEmptyStats() {
     levelsUnlocked: 1,
     // Currency system
     stars: 0,
-    lifetimeStars: 0
+    lifetimeStars: 0,
+    // Session history
+    sessionHistory: []
   }
 }
 
@@ -424,6 +426,76 @@ function createProfileStore(Alpine) {
       }
 
       profile.equippedItems.soundPack = packId
+    },
+
+    // Session history methods
+    saveSession(sessionData) {
+      const profile = this.activeProfile
+      if (!profile) return
+
+      // Initialize sessionHistory if it doesn't exist (for old profiles)
+      if (!profile.stats.sessionHistory) {
+        profile.stats.sessionHistory = []
+      }
+
+      // Check if session already exists (updating existing session)
+      const existingIndex = profile.stats.sessionHistory.findIndex(
+        s => s.gameId === sessionData.gameId
+      )
+
+      if (existingIndex >= 0) {
+        // Update existing session
+        profile.stats.sessionHistory[existingIndex] = {
+          ...profile.stats.sessionHistory[existingIndex],
+          ...sessionData,
+          lastUpdated: Date.now()
+        }
+      } else {
+        // Add new session
+        profile.stats.sessionHistory.push({
+          ...sessionData,
+          createdAt: Date.now(),
+          lastUpdated: Date.now()
+        })
+      }
+
+      // Keep only last 50 sessions per mode to prevent storage bloat
+      const sessionsByMode = profile.stats.sessionHistory.filter(s => s.mode === sessionData.mode)
+      if (sessionsByMode.length > 50) {
+        // Remove oldest sessions for this mode
+        const sortedSessions = sessionsByMode.sort((a, b) => b.lastUpdated - a.lastUpdated)
+        const sessionsToRemove = sortedSessions.slice(50)
+        profile.stats.sessionHistory = profile.stats.sessionHistory.filter(
+          s => !sessionsToRemove.find(r => r.gameId === s.gameId)
+        )
+      }
+    },
+
+    getSessionsByMode(mode) {
+      const profile = this.activeProfile
+      if (!profile || !profile.stats.sessionHistory) return []
+
+      return profile.stats.sessionHistory
+        .filter(s => s.mode === mode)
+        .sort((a, b) => b.lastUpdated - a.lastUpdated)
+    },
+
+    getIncompleteSessionsByMode(mode) {
+      const profile = this.activeProfile
+      if (!profile || !profile.stats.sessionHistory) return []
+
+      return profile.stats.sessionHistory
+        .filter(s => s.mode === mode && !s.isCompleted)
+        .sort((a, b) => b.lastUpdated - a.lastUpdated)
+    },
+
+    deleteSession(gameId) {
+      const profile = this.activeProfile
+      if (!profile || !profile.stats.sessionHistory) return
+
+      profile.stats.sessionHistory = profile.stats.sessionHistory.filter(
+        s => s.gameId !== gameId
+      )
     }
   }
 }

@@ -12,6 +12,7 @@ function createGameStore(Alpine) {
     timeLimit: Alpine.$persist(60).as('ezmath_game_timeLimit'),
 
     // Game state (persisted)
+    gameId: Alpine.$persist(null).as('ezmath_game_gameId'),
     isPlaying: Alpine.$persist(false).as('ezmath_game_isPlaying'),
     isPaused: Alpine.$persist(false).as('ezmath_game_isPaused'),
     currentProblem: Alpine.$persist(null).as('ezmath_game_currentProblem'),
@@ -182,6 +183,9 @@ function createGameStore(Alpine) {
     },
 
     startGame(mode, settings = {}) {
+      // Generate unique game ID
+      this.gameId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+
       this.mode = mode
       this.difficulty = settings.difficulty || 'easy'
       this.operations = settings.operations || ['add', 'subtract']
@@ -231,6 +235,9 @@ function createGameStore(Alpine) {
         this.tolakCompleted = false
         this.initTolakQuestions()
       }
+
+      // Save initial session to profile
+      this.saveSessionToProfile()
 
       sounds.start()
       if (mode === 'sifir') {
@@ -425,6 +432,9 @@ function createGameStore(Alpine) {
       } else if (this.mode === 'level') {
         Alpine.store('profile').updateHighScore('level', this.currentLevel)
       }
+
+      // Mark session as completed in profile
+      this.saveSessionToProfile(true)
     },
 
     checkLevelComplete() {
@@ -837,6 +847,95 @@ function createGameStore(Alpine) {
       this.mode = null
       this.currentProblem = null
       this.lastTimerUpdate = null
+    },
+
+    // Session management
+    saveSessionToProfile(isCompleted = false) {
+      const sessionData = {
+        gameId: this.gameId,
+        mode: this.mode,
+        isCompleted,
+        score: this.score,
+        problemsAttempted: this.problemsAttempted,
+        correctAnswers: this.correctAnswers,
+        accuracy: this.accuracy,
+        difficulty: this.difficulty,
+        operations: this.operations,
+        // Mode-specific data
+        currentSifir: this.currentSifir,
+        currentBahagi: this.currentBahagi,
+        currentTambahDifficulty: this.currentTambahDifficulty,
+        currentTolakDifficulty: this.currentTolakDifficulty,
+        currentLevel: this.currentLevel,
+        timeRemaining: this.timeRemaining,
+        timeLimit: this.timeLimit
+      }
+
+      Alpine.store('profile').saveSession(sessionData)
+    },
+
+    resumeSession(gameId) {
+      // Find session directly without filtering by mode first
+      const profile = Alpine.store('profile').activeProfile
+      if (!profile || !profile.stats.sessionHistory) return false
+
+      const session = profile.stats.sessionHistory.find(s => s.gameId === gameId)
+      if (!session) return false
+
+      // Restore game state from session
+      this.gameId = session.gameId
+      this.mode = session.mode
+      this.difficulty = session.difficulty
+      this.operations = session.operations || ['add', 'subtract']
+      this.timeLimit = session.timeLimit || 60
+      this.score = session.score || 0
+      this.problemsAttempted = session.problemsAttempted || 0
+      this.correctAnswers = session.correctAnswers || 0
+      this.isPlaying = true
+      this.isPaused = false
+      this.userAnswer = ''
+      this.lastResult = null
+      this.showFeedback = false
+
+      // Restore mode-specific state
+      if (this.mode === 'timed') {
+        this.timeRemaining = session.timeRemaining || this.timeLimit
+        this.startTimer()
+      } else if (this.mode === 'level') {
+        this.currentLevel = session.currentLevel || 1
+        this.updateDifficultyForLevel()
+      } else if (this.mode === 'sifir') {
+        this.currentSifir = session.currentSifir || 1
+        this.sifirCompleted = false
+        this.initSifirQuestions()
+      } else if (this.mode === 'bahagi') {
+        this.currentBahagi = session.currentBahagi || 1
+        this.bahagiCompleted = false
+        this.initBahagiQuestions()
+      } else if (this.mode === 'tambah') {
+        this.currentTambahDifficulty = session.currentTambahDifficulty || 'easy'
+        this.tambahCompleted = false
+        this.initTambahQuestions()
+      } else if (this.mode === 'tolak') {
+        this.currentTolakDifficulty = session.currentTolakDifficulty || 'easy'
+        this.tolakCompleted = false
+        this.initTolakQuestions()
+      }
+
+      // Generate next problem
+      if (this.mode === 'sifir') {
+        this.nextSifirProblem()
+      } else if (this.mode === 'bahagi') {
+        this.nextBahagiProblem()
+      } else if (this.mode === 'tambah') {
+        this.nextTambahProblem()
+      } else if (this.mode === 'tolak') {
+        this.nextTolakProblem()
+      } else {
+        this.nextProblem()
+      }
+
+      return true
     }
   }
 }
