@@ -17,8 +17,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="/ezmath/assets/index-DdjSCrQt.js"></script>
-  <link rel="stylesheet" crossorigin href="/ezmath/assets/index-Cff9AMPG.css">
+  <script type="module" crossorigin src="/ezmath/assets/index-B00R7QL_.js"></script>
+  <link rel="stylesheet" crossorigin href="/ezmath/assets/index-BD9H39hF.css">
 </head>
 <body>
   <div id="app" x-data="{}" x-init="$store.profile.activeProfile?.equippedItems?.theme && Themes.applyTheme($store.profile.activeProfile.equippedItems.theme)">
@@ -719,10 +719,26 @@
           <div class="flex items-center justify-center gap-2">
             <div
               class="text-3xl transition-transform"
-              :class="{ 'animate-bounce': $store.game.showFeedback && $store.game.lastResult === 'correct' }"
+              :class="{
+                'animate-bounce': $store.game.showFeedback && $store.game.lastResult === 'correct',
+                'animate-hurt': $store.game.showFeedback && $store.game.lastResult === 'incorrect'
+              }"
               x-text="PetSystem.getPetEmoji($store.profile.activeProfile?.pet?.stage || 0)"
             ></div>
-            <div class="text-sm text-gray-500" x-text="($store.profile.activeProfile?.pet?.name || 'Buddy') + ' is cheering you on!'"></div>
+            <div
+              class="text-sm"
+              :class="$store.game.showFeedback && $store.game.lastResult === 'incorrect' ? 'text-red-500' : 'text-gray-500'"
+              x-text="$store.game.showFeedback && $store.game.lastResult === 'incorrect'
+                ? ($store.profile.activeProfile?.pet?.name || 'Buddy') + ' feels sad...'
+                : ($store.profile.activeProfile?.pet?.name || 'Buddy') + ' is cheering you on!'"
+            ></div>
+          </div>
+          <div x-show="$store.game.petDevolved" class="text-xs text-red-500 mt-1">
+            😿 <span x-text="$store.profile.activeProfile?.pet?.name || 'Buddy'"></span> devolved to
+            <span x-text="PetSystem.getPetStageName($store.game.petDevolutionData?.newStage || 0)"></span>.
+          </div>
+          <div x-show="$store.game.petDevolutionWarning && !$store.game.petDevolved" class="text-xs text-amber-600 mt-1"
+               x-text="'⚠️ ' + ($store.profile.activeProfile?.pet?.name || 'Buddy') + ' is ' + ($store.game.petDevolutionWarning?.mistakesRemaining || 1) + ' mistake' + (($store.game.petDevolutionWarning?.mistakesRemaining || 1) === 1 ? '' : 's') + ' away from devolving.'">
           </div>
         </div>
 
@@ -930,17 +946,22 @@
           <div class="mb-6 px-4">
             <div class="flex items-center justify-between text-sm text-gray-600 mb-2">
               <span>Evolution Progress</span>
-              <span x-text="PetSystem.getEvolutionProgress($store.profile.activeProfile?.stats.totalProblems || 0) + '%'"></span>
+              <span x-text="PetSystem.getEvolutionProgress($store.profile.activeProfile?.pet?.xp || 0) + '%'"></span>
             </div>
             <div class="h-4 bg-purple-200 rounded-full overflow-hidden">
               <div
                 class="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all"
-                :style="'width: ' + PetSystem.getEvolutionProgress($store.profile.activeProfile?.stats.totalProblems || 0) + '%'"
+                :style="'width: ' + PetSystem.getEvolutionProgress($store.profile.activeProfile?.pet?.xp || 0) + '%'"
               ></div>
             </div>
             <div class="text-xs text-gray-500 mt-2 text-center">
-              <span x-text="PetSystem.getProblemsToNextEvolution($store.profile.activeProfile?.stats.totalProblems || 0)"></span> more problems to evolve!
+              <span x-text="PetSystem.getProblemsToNextEvolution($store.profile.activeProfile?.pet?.xp || 0)"></span> more problems to evolve!
             </div>
+            <div
+              x-show="($store.profile.activeProfile?.pet?.stage || 0) > 0 && ($store.profile.activeProfile?.pet?.devolutionRisk || 0) >= (PetSystem.DEVOLUTION_THRESHOLD - 1)"
+              class="text-xs text-amber-600 mt-2 text-center"
+              x-text="'⚠️ ' + ($store.profile.activeProfile?.pet?.name || 'Buddy') + ' is ' + Math.max(0, PetSystem.DEVOLUTION_THRESHOLD - ($store.profile.activeProfile?.pet?.devolutionRisk || 0)) + ' mistake' + (Math.max(0, PetSystem.DEVOLUTION_THRESHOLD - ($store.profile.activeProfile?.pet?.devolutionRisk || 0)) === 1 ? '' : 's') + ' away from devolving.'"
+            ></div>
           </div>
 
           <!-- Pet Stats -->
