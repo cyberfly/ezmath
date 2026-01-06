@@ -682,7 +682,7 @@ function createGameStore(Alpine) {
       const [min, max] = ranges[difficulty]
       const questions = []
 
-      for (let i = 0; i < 12; i++) {
+      for (let i = 0; i < 20; i++) {
         let num1, num2, answer
 
         if (operation === 'add') {
