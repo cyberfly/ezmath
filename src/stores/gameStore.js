@@ -5,82 +5,86 @@ import { sounds } from '../utils/sounds.js'
 
 function createGameStore(Alpine) {
   return {
-    // Game settings
-    mode: null, // 'practice', 'timed', 'level'
-    difficulty: 'easy',
-    operations: ['add', 'subtract'],
-    timeLimit: 60, // seconds for timed mode
+    // Game settings (persisted)
+    mode: Alpine.$persist(null).as('ezmath_game_mode'),
+    difficulty: Alpine.$persist('easy').as('ezmath_game_difficulty'),
+    operations: Alpine.$persist(['add', 'subtract']).as('ezmath_game_operations'),
+    timeLimit: Alpine.$persist(60).as('ezmath_game_timeLimit'),
 
-    // Game state
-    isPlaying: false,
-    isPaused: false,
-    currentProblem: null,
+    // Game state (persisted)
+    isPlaying: Alpine.$persist(false).as('ezmath_game_isPlaying'),
+    isPaused: Alpine.$persist(false).as('ezmath_game_isPaused'),
+    currentProblem: Alpine.$persist(null).as('ezmath_game_currentProblem'),
     userAnswer: '',
-    inputElement: null, // Reference to the answer input element
+    inputElement: null, // Reference to the answer input element (NOT persisted)
 
-    // Score tracking
-    score: 0,
-    problemsAttempted: 0,
-    correctAnswers: 0,
+    // Score tracking (persisted)
+    score: Alpine.$persist(0).as('ezmath_game_score'),
+    problemsAttempted: Alpine.$persist(0).as('ezmath_game_problemsAttempted'),
+    correctAnswers: Alpine.$persist(0).as('ezmath_game_correctAnswers'),
 
-    // Timed mode
-    timeRemaining: 0,
-    timerInterval: null,
+    // Timed mode (persisted except timerInterval)
+    timeRemaining: Alpine.$persist(0).as('ezmath_game_timeRemaining'),
+    timerInterval: null, // NOT persisted - will be recreated on resume
+    lastTimerUpdate: Alpine.$persist(null).as('ezmath_game_lastTimerUpdate'), // Track when timer was last updated
 
-    // Level mode
-    currentLevel: 1,
-    problemsInLevel: 0,
-    correctInLevel: 0,
-    levelTarget: 10, // problems per level
-    levelPassThreshold: 8, // correct needed to pass
+    // Level mode (persisted)
+    currentLevel: Alpine.$persist(1).as('ezmath_game_currentLevel'),
+    problemsInLevel: Alpine.$persist(0).as('ezmath_game_problemsInLevel'),
+    correctInLevel: Alpine.$persist(0).as('ezmath_game_correctInLevel'),
+    levelTarget: 10, // problems per level (constant)
+    levelPassThreshold: 8, // correct needed to pass (constant)
 
-    // Darab mode (multiplication tables)
-    currentSifir: 1,
-    sifirQuestions: [], // current set of questions to answer
-    sifirWrongQuestions: [], // questions answered wrong, will be repeated
-    sifirCurrentIndex: 0,
-    sifirCompleted: false, // true when all 12 tables mastered
+    // Darab mode (persisted)
+    currentSifir: Alpine.$persist(1).as('ezmath_game_currentSifir'),
+    sifirQuestions: Alpine.$persist([]).as('ezmath_game_sifirQuestions'),
+    sifirWrongQuestions: Alpine.$persist([]).as('ezmath_game_sifirWrongQuestions'),
+    sifirCurrentIndex: Alpine.$persist(0).as('ezmath_game_sifirCurrentIndex'),
+    sifirCompleted: Alpine.$persist(false).as('ezmath_game_sifirCompleted'),
 
-    // Bahagi mode (division tables)
-    currentBahagi: 1,
-    bahagiQuestions: [],
-    bahagiWrongQuestions: [],
-    bahagiCurrentIndex: 0,
-    bahagiCompleted: false,
+    // Bahagi mode (persisted)
+    currentBahagi: Alpine.$persist(1).as('ezmath_game_currentBahagi'),
+    bahagiQuestions: Alpine.$persist([]).as('ezmath_game_bahagiQuestions'),
+    bahagiWrongQuestions: Alpine.$persist([]).as('ezmath_game_bahagiWrongQuestions'),
+    bahagiCurrentIndex: Alpine.$persist(0).as('ezmath_game_bahagiCurrentIndex'),
+    bahagiCompleted: Alpine.$persist(false).as('ezmath_game_bahagiCompleted'),
 
-    // Tambah mode (addition by difficulty)
-    currentTambahDifficulty: 'easy', // 'easy', 'medium', 'hard'
-    tambahQuestions: [],
-    tambahWrongQuestions: [],
-    tambahCurrentIndex: 0,
-    tambahCompleted: false,
+    // Tambah mode (persisted)
+    currentTambahDifficulty: Alpine.$persist('easy').as('ezmath_game_currentTambahDifficulty'),
+    tambahQuestions: Alpine.$persist([]).as('ezmath_game_tambahQuestions'),
+    tambahWrongQuestions: Alpine.$persist([]).as('ezmath_game_tambahWrongQuestions'),
+    tambahCurrentIndex: Alpine.$persist(0).as('ezmath_game_tambahCurrentIndex'),
+    tambahCompleted: Alpine.$persist(false).as('ezmath_game_tambahCompleted'),
 
-    // Tolak mode (subtraction by difficulty)
-    currentTolakDifficulty: 'easy', // 'easy', 'medium', 'hard'
-    tolakQuestions: [],
-    tolakWrongQuestions: [],
-    tolakCurrentIndex: 0,
-    tolakCompleted: false,
+    // Tolak mode (persisted)
+    currentTolakDifficulty: Alpine.$persist('easy').as('ezmath_game_currentTolakDifficulty'),
+    tolakQuestions: Alpine.$persist([]).as('ezmath_game_tolakQuestions'),
+    tolakWrongQuestions: Alpine.$persist([]).as('ezmath_game_tolakWrongQuestions'),
+    tolakCurrentIndex: Alpine.$persist(0).as('ezmath_game_tolakCurrentIndex'),
+    tolakCompleted: Alpine.$persist(false).as('ezmath_game_tolakCompleted'),
 
-    // Feedback
-    lastResult: null, // 'correct' or 'incorrect'
-    showFeedback: false,
+    // Feedback (persisted)
+    lastResult: Alpine.$persist(null).as('ezmath_game_lastResult'),
+    showFeedback: Alpine.$persist(false).as('ezmath_game_showFeedback'),
 
-    // Currency tracking for current session
-    starsEarned: 0,
-    starBreakdown: {
+    // Currency tracking (persisted)
+    starsEarned: Alpine.$persist(0).as('ezmath_game_starsEarned'),
+    starBreakdown: Alpine.$persist({
       base: 0,
       streakBonus: 0,
       accuracyBonus: 0,
       completionBonus: 0
-    },
+    }).as('ezmath_game_starBreakdown'),
 
-    // Pet evolution tracking
-    petEvolved: false,
-    petEvolutionData: null,
+    // Pet evolution tracking (persisted)
+    petEvolved: Alpine.$persist(false).as('ezmath_game_petEvolved'),
+    petEvolutionData: Alpine.$persist(null).as('ezmath_game_petEvolutionData'),
 
-    // Milestone tracking
-    milestonesAchieved: [],
+    // Milestone tracking (persisted)
+    milestonesAchieved: Alpine.$persist([]).as('ezmath_game_milestonesAchieved'),
+
+    // Initialization flag
+    _initialized: false,
 
     // Computed
     get accuracy() {
@@ -136,6 +140,30 @@ function createGameStore(Alpine) {
     },
 
     // Methods
+    init() {
+      // Called once when Alpine starts - restore timer if needed
+      if (!this._initialized) {
+        this._initialized = true
+
+        // If game was playing in timed mode, restore the timer
+        if (this.isPlaying && this.mode === 'timed' && !this.timerInterval) {
+          // Adjust time remaining based on time elapsed since last update
+          if (this.lastTimerUpdate) {
+            const timeElapsed = Math.floor((Date.now() - this.lastTimerUpdate) / 1000)
+            this.timeRemaining = Math.max(0, this.timeRemaining - timeElapsed)
+
+            if (this.timeRemaining <= 0) {
+              // Time ran out while away
+              this.endGame()
+            } else {
+              // Resume timer
+              this.startTimer()
+            }
+          }
+        }
+      }
+    },
+
     registerInput(element) {
       this.inputElement = element
       // Focus immediately when registered
@@ -309,9 +337,11 @@ function createGameStore(Alpine) {
     },
 
     startTimer() {
+      this.lastTimerUpdate = Date.now()
       this.timerInterval = setInterval(() => {
         if (!this.isPaused) {
           this.timeRemaining--
+          this.lastTimerUpdate = Date.now() // Update timestamp each second
           // Play tick sounds in last 10 seconds
           if (this.timeRemaining <= 10 && this.timeRemaining > 0) {
             if (this.timeRemaining <= 5) {
@@ -806,6 +836,7 @@ function createGameStore(Alpine) {
       this.endGame()
       this.mode = null
       this.currentProblem = null
+      this.lastTimerUpdate = null
     }
   }
 }

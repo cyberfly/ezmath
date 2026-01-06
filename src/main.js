@@ -5,6 +5,7 @@ import persist from '@alpinejs/persist'
 import { createProfileStore, AVATARS } from './stores/profileStore.js'
 import { createGameStore } from './stores/gameStore.js'
 import { createShopStore } from './stores/shopStore.js'
+import { createViewStore } from './stores/viewStore.js'
 import { DIFFICULTY_CONFIG, OPERATION_SYMBOLS } from './utils/mathProblems.js'
 import * as PetSystem from './utils/petSystem.js'
 import * as Themes from './utils/themes.js'
@@ -17,6 +18,7 @@ Alpine.plugin(persist)
 Alpine.store('profile', createProfileStore(Alpine))
 Alpine.store('game', createGameStore(Alpine))
 Alpine.store('shop', createShopStore(Alpine))
+Alpine.store('view', createViewStore(Alpine))
 
 // Make constants and utilities available globally
 window.AVATARS = AVATARS
@@ -28,6 +30,11 @@ window.SoundPacks = SoundPacks
 
 // Start Alpine
 Alpine.start()
+
+// Initialize game store after Alpine starts (to restore timer if needed)
+setTimeout(() => {
+  Alpine.store('game').init()
+}, 0)
 
 // Register service worker for PWA
 if ('serviceWorker' in navigator) {
