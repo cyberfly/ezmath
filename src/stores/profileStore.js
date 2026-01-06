@@ -27,7 +27,10 @@ function createEmptyStats() {
     },
     currentStreak: 0,
     bestStreak: 0,
-    levelsUnlocked: 1
+    levelsUnlocked: 1,
+    // Currency system
+    stars: 0,
+    lifetimeStars: 0
   }
 }
 
@@ -50,7 +53,39 @@ function createProfileStore(Alpine) {
         name: name.trim(),
         avatar,
         createdAt: Date.now(),
-        stats: createEmptyStats()
+        stats: createEmptyStats(),
+        // Unlockables
+        unlockedItems: {
+          avatars: ['🦊'], // Default fox avatar
+          themes: ['default'],
+          soundPacks: ['classic'],
+          petAccessories: []
+        },
+        equippedItems: {
+          avatar: avatar,
+          theme: 'default',
+          soundPack: 'classic',
+          petAccessory: null
+        },
+        // Pet system
+        pet: {
+          name: 'Buddy',
+          stage: 0, // 0=egg, 1=baby, 2=kid, 3=teen, 4=adult
+          xp: 0,
+          evolutionPath: 'default',
+          lastFed: null,
+          accessories: []
+        },
+        // Milestones
+        milestones: {
+          problems25: false,
+          problems50: false,
+          problems100: false,
+          problems500: false,
+          streak10: false,
+          streak25: false,
+          streak50: false
+        }
       }
       this.profiles.push(profile)
       this.activeId = profile.id
@@ -128,6 +163,267 @@ function createProfileStore(Alpine) {
       }
 
       return attempted > 0 ? Math.round((correct / attempted) * 100) : 0
+    },
+
+    addStars(amount, reason = 'earned') {
+      const profile = this.activeProfile
+      if (!profile) return
+
+      profile.stats.stars += amount
+      profile.stats.lifetimeStars += amount
+    },
+
+    unlockAvatar(avatarId) {
+      const profile = this.activeProfile
+      if (!profile) return
+
+      // Initialize unlockedItems if it doesn't exist (for old profiles)
+      if (!profile.unlockedItems) {
+        profile.unlockedItems = {
+          avatars: ['🦊'],
+          themes: ['default'],
+          soundPacks: ['classic'],
+          petAccessories: []
+        }
+      }
+
+      if (!profile.unlockedItems.avatars.includes(avatarId)) {
+        profile.unlockedItems.avatars.push(avatarId)
+      }
+    },
+
+    equipAvatar(avatarId) {
+      const profile = this.activeProfile
+      if (!profile) return
+
+      // Initialize equippedItems if it doesn't exist (for old profiles)
+      if (!profile.equippedItems) {
+        profile.equippedItems = {
+          avatar: profile.avatar,
+          theme: 'default',
+          soundPack: 'classic',
+          petAccessory: null
+        }
+      }
+
+      profile.equippedItems.avatar = avatarId
+      profile.avatar = avatarId // Also update main avatar field
+    },
+
+    // Pet system methods
+    initializePet() {
+      const profile = this.activeProfile
+      if (!profile) return
+
+      // Initialize pet if it doesn't exist (for old profiles)
+      if (!profile.pet) {
+        profile.pet = {
+          name: 'Buddy',
+          stage: 0,
+          xp: 0,
+          evolutionPath: 'default',
+          lastFed: null,
+          accessories: []
+        }
+      }
+    },
+
+    updatePetName(name) {
+      const profile = this.activeProfile
+      if (!profile) return
+
+      this.initializePet()
+      profile.pet.name = name.trim() || 'Buddy'
+    },
+
+    updatePetXP(amount) {
+      const profile = this.activeProfile
+      if (!profile) return
+
+      this.initializePet()
+      profile.pet.xp += amount
+    },
+
+    checkPetEvolution() {
+      const profile = this.activeProfile
+      if (!profile) return null
+
+      this.initializePet()
+
+      // Import pet system utilities (will be available globally)
+      const totalProblems = profile.stats.totalProblems || 0
+      const currentStage = profile.pet.stage
+
+      // Calculate what stage pet should be at
+      let newStage = 0
+      if (totalProblems >= 500) newStage = 4
+      else if (totalProblems >= 300) newStage = 3
+      else if (totalProblems >= 100) newStage = 2
+      else if (totalProblems >= 25) newStage = 1
+      else newStage = 0
+
+      if (newStage > currentStage) {
+        profile.pet.stage = newStage
+        return {
+          evolved: true,
+          oldStage: currentStage,
+          newStage: newStage
+        }
+      }
+
+      return {
+        evolved: false,
+        currentStage: currentStage
+      }
+    },
+
+    feedPet() {
+      const profile = this.activeProfile
+      if (!profile || (profile.stats.stars || 0) < 10) return false
+
+      this.initializePet()
+
+      // Deduct 10 stars
+      profile.stats.stars -= 10
+      profile.pet.lastFed = Date.now()
+
+      return true
+    },
+
+    playWithPet() {
+      const profile = this.activeProfile
+      if (!profile || (profile.stats.stars || 0) < 5) return false
+
+      this.initializePet()
+
+      // Deduct 5 stars
+      profile.stats.stars -= 5
+
+      return true
+    },
+
+    // Milestone system methods
+    checkAndAwardMilestones() {
+      const profile = this.activeProfile
+      if (!profile) return []
+
+      // Initialize milestones if it doesn't exist (for old profiles)
+      if (!profile.milestones) {
+        profile.milestones = {
+          problems25: false,
+          problems50: false,
+          problems100: false,
+          problems500: false,
+          streak10: false,
+          streak25: false,
+          streak50: false
+        }
+      }
+
+      const newlyAchieved = []
+
+      // Check problem count milestones
+      const problemMilestones = [
+        { id: 'problems25', threshold: 25, reward: 100, message: '25 Problems Solved!', emoji: '🎉' },
+        { id: 'problems50', threshold: 50, reward: 200, message: '50 Problems Champion!', emoji: '🌟' },
+        { id: 'problems100', threshold: 100, reward: 500, message: '100 Problems Mastered!', emoji: '🏆' },
+        { id: 'problems500', threshold: 500, reward: 1000, message: '500 Problems LEGEND!', emoji: '💎' }
+      ]
+
+      for (const milestone of problemMilestones) {
+        if (!profile.milestones[milestone.id] && (profile.stats.totalProblems || 0) >= milestone.threshold) {
+          profile.milestones[milestone.id] = true
+          profile.stats.stars += milestone.reward
+          newlyAchieved.push(milestone)
+        }
+      }
+
+      // Check streak milestones
+      const streakMilestones = [
+        { id: 'streak10', threshold: 10, reward: 50, message: 'Hot Streak!', emoji: '🔥' },
+        { id: 'streak25', threshold: 25, reward: 150, message: 'Unstoppable Streak!', emoji: '🔥' },
+        { id: 'streak50', threshold: 50, reward: 500, message: 'UNSTOPPABLE!', emoji: '🔥' }
+      ]
+
+      for (const milestone of streakMilestones) {
+        if (!profile.milestones[milestone.id] && (profile.stats.bestStreak || 0) >= milestone.threshold) {
+          profile.milestones[milestone.id] = true
+          profile.stats.stars += milestone.reward
+          newlyAchieved.push(milestone)
+        }
+      }
+
+      return newlyAchieved
+    },
+
+    // Theme system methods
+    unlockTheme(themeId) {
+      const profile = this.activeProfile
+      if (!profile) return
+
+      if (!profile.unlockedItems) {
+        profile.unlockedItems = {
+          avatars: ['🦊'],
+          themes: ['default'],
+          soundPacks: ['classic'],
+          petAccessories: []
+        }
+      }
+
+      if (!profile.unlockedItems.themes.includes(themeId)) {
+        profile.unlockedItems.themes.push(themeId)
+      }
+    },
+
+    equipTheme(themeId) {
+      const profile = this.activeProfile
+      if (!profile) return
+
+      if (!profile.equippedItems) {
+        profile.equippedItems = {
+          avatar: profile.avatar,
+          theme: 'default',
+          soundPack: 'classic',
+          petAccessory: null
+        }
+      }
+
+      profile.equippedItems.theme = themeId
+    },
+
+    // Sound pack system methods
+    unlockSoundPack(packId) {
+      const profile = this.activeProfile
+      if (!profile) return
+
+      if (!profile.unlockedItems) {
+        profile.unlockedItems = {
+          avatars: ['🦊'],
+          themes: ['default'],
+          soundPacks: ['classic'],
+          petAccessories: []
+        }
+      }
+
+      if (!profile.unlockedItems.soundPacks.includes(packId)) {
+        profile.unlockedItems.soundPacks.push(packId)
+      }
+    },
+
+    equipSoundPack(packId) {
+      const profile = this.activeProfile
+      if (!profile) return
+
+      if (!profile.equippedItems) {
+        profile.equippedItems = {
+          avatar: profile.avatar,
+          theme: 'default',
+          soundPack: 'classic',
+          petAccessory: null
+        }
+      }
+
+      profile.equippedItems.soundPack = packId
     }
   }
 }
