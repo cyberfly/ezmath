@@ -47,6 +47,20 @@ function createGameStore(Alpine) {
     bahagiCurrentIndex: 0,
     bahagiCompleted: false,
 
+    // Tambah mode (addition by difficulty)
+    currentTambahDifficulty: 'easy', // 'easy', 'medium', 'hard'
+    tambahQuestions: [],
+    tambahWrongQuestions: [],
+    tambahCurrentIndex: 0,
+    tambahCompleted: false,
+
+    // Tolak mode (subtraction by difficulty)
+    currentTolakDifficulty: 'easy', // 'easy', 'medium', 'hard'
+    tolakQuestions: [],
+    tolakWrongQuestions: [],
+    tolakCurrentIndex: 0,
+    tolakCompleted: false,
+
     // Feedback
     lastResult: null, // 'correct' or 'incorrect'
     showFeedback: false,
@@ -86,6 +100,24 @@ function createGameStore(Alpine) {
       return this.bahagiQuestions.length - this.bahagiCurrentIndex + this.bahagiWrongQuestions.length
     },
 
+    get tambahProgress() {
+      if (this.tambahQuestions.length === 0) return 0
+      return Math.round((this.tambahCurrentIndex / this.tambahQuestions.length) * 100)
+    },
+
+    get tambahQuestionsRemaining() {
+      return this.tambahQuestions.length - this.tambahCurrentIndex + this.tambahWrongQuestions.length
+    },
+
+    get tolakProgress() {
+      if (this.tolakQuestions.length === 0) return 0
+      return Math.round((this.tolakCurrentIndex / this.tolakQuestions.length) * 100)
+    },
+
+    get tolakQuestionsRemaining() {
+      return this.tolakQuestions.length - this.tolakCurrentIndex + this.tolakWrongQuestions.length
+    },
+
     // Methods
     startGame(mode, settings = {}) {
       this.mode = mode
@@ -118,6 +150,14 @@ function createGameStore(Alpine) {
         this.currentBahagi = settings.startBahagi || 1
         this.bahagiCompleted = false
         this.initBahagiQuestions()
+      } else if (mode === 'tambah') {
+        this.currentTambahDifficulty = settings.difficulty || 'easy'
+        this.tambahCompleted = false
+        this.initTambahQuestions()
+      } else if (mode === 'tolak') {
+        this.currentTolakDifficulty = settings.difficulty || 'easy'
+        this.tolakCompleted = false
+        this.initTolakQuestions()
       }
 
       sounds.start()
@@ -125,6 +165,10 @@ function createGameStore(Alpine) {
         this.nextSifirProblem()
       } else if (mode === 'bahagi') {
         this.nextBahagiProblem()
+      } else if (mode === 'tambah') {
+        this.nextTambahProblem()
+      } else if (mode === 'tolak') {
+        this.nextTolakProblem()
       } else {
         this.nextProblem()
       }
@@ -447,6 +491,183 @@ function createGameStore(Alpine) {
         this.currentBahagi++
         this.initBahagiQuestions()
         this.nextBahagiProblem()
+      }
+    },
+
+    // Helper: Generate questions by difficulty and operation
+    generateQuestionsByDifficulty(difficulty, operation) {
+      const ranges = {
+        easy: [1, 10],
+        medium: [1, 50],
+        hard: [1, 100]
+      }
+      const [min, max] = ranges[difficulty]
+      const questions = []
+
+      for (let i = 0; i < 12; i++) {
+        let num1, num2, answer
+
+        if (operation === 'add') {
+          num1 = Math.floor(Math.random() * (max - min + 1)) + min
+          num2 = Math.floor(Math.random() * (max - min + 1)) + min
+          answer = num1 + num2
+        } else if (operation === 'subtract') {
+          // Ensure no negative results
+          num1 = Math.floor(Math.random() * (max - min + 1)) + min
+          num2 = Math.floor(Math.random() * (num1 - min + 1)) + min
+          answer = num1 - num2
+        }
+
+        questions.push({
+          num1,
+          num2,
+          answer,
+          operation,
+          symbol: operation === 'add' ? '+' : '-',
+          difficulty
+        })
+      }
+
+      return this.shuffleArray(questions)
+    },
+
+    // Tambah mode methods
+    initTambahQuestions() {
+      this.tambahQuestions = this.generateQuestionsByDifficulty(this.currentTambahDifficulty, 'add')
+      this.tambahWrongQuestions = []
+      this.tambahCurrentIndex = 0
+    },
+
+    nextTambahProblem() {
+      if (this.tambahCurrentIndex < this.tambahQuestions.length) {
+        this.currentProblem = this.tambahQuestions[this.tambahCurrentIndex]
+      } else if (this.tambahWrongQuestions.length > 0) {
+        this.tambahQuestions = this.shuffleArray(this.tambahWrongQuestions)
+        this.tambahWrongQuestions = []
+        this.tambahCurrentIndex = 0
+        this.currentProblem = this.tambahQuestions[0]
+      } else {
+        this.advanceToNextTambahDifficulty()
+        return
+      }
+      this.userAnswer = ''
+      this.showFeedback = false
+    },
+
+    submitTambahAnswer() {
+      if (!this.userAnswer || !this.currentProblem) return
+
+      const isCorrect = parseInt(this.userAnswer) === this.currentProblem.answer
+
+      this.problemsAttempted++
+      this.lastResult = isCorrect ? 'correct' : 'incorrect'
+      this.showFeedback = true
+
+      if (isCorrect) {
+        this.correctAnswers++
+        const difficultyPoints = { easy: 10, medium: 20, hard: 30 }
+        this.score += difficultyPoints[this.currentTambahDifficulty]
+        sounds.correct()
+      } else {
+        this.tambahWrongQuestions.push(this.currentProblem)
+        sounds.wrong()
+      }
+
+      Alpine.store('profile').updateStats('add', this.currentTambahDifficulty, isCorrect)
+      this.tambahCurrentIndex++
+
+      setTimeout(() => {
+        if (this.isPlaying) {
+          this.nextTambahProblem()
+        }
+      }, isCorrect ? 500 : 1000)
+    },
+
+    advanceToNextTambahDifficulty() {
+      const difficulties = ['easy', 'medium', 'hard']
+      const currentIndex = difficulties.indexOf(this.currentTambahDifficulty)
+
+      if (currentIndex >= difficulties.length - 1) {
+        // Completed all difficulties!
+        this.tambahCompleted = true
+        sounds.levelUp()
+        this.endGame()
+      } else {
+        // Move to next difficulty
+        sounds.levelUp()
+        this.currentTambahDifficulty = difficulties[currentIndex + 1]
+        this.initTambahQuestions()
+        this.nextTambahProblem()
+      }
+    },
+
+    // Tolak mode methods
+    initTolakQuestions() {
+      this.tolakQuestions = this.generateQuestionsByDifficulty(this.currentTolakDifficulty, 'subtract')
+      this.tolakWrongQuestions = []
+      this.tolakCurrentIndex = 0
+    },
+
+    nextTolakProblem() {
+      if (this.tolakCurrentIndex < this.tolakQuestions.length) {
+        this.currentProblem = this.tolakQuestions[this.tolakCurrentIndex]
+      } else if (this.tolakWrongQuestions.length > 0) {
+        this.tolakQuestions = this.shuffleArray(this.tolakWrongQuestions)
+        this.tolakWrongQuestions = []
+        this.tolakCurrentIndex = 0
+        this.currentProblem = this.tolakQuestions[0]
+      } else {
+        this.advanceToNextTolakDifficulty()
+        return
+      }
+      this.userAnswer = ''
+      this.showFeedback = false
+    },
+
+    submitTolakAnswer() {
+      if (!this.userAnswer || !this.currentProblem) return
+
+      const isCorrect = parseInt(this.userAnswer) === this.currentProblem.answer
+
+      this.problemsAttempted++
+      this.lastResult = isCorrect ? 'correct' : 'incorrect'
+      this.showFeedback = true
+
+      if (isCorrect) {
+        this.correctAnswers++
+        const difficultyPoints = { easy: 10, medium: 20, hard: 30 }
+        this.score += difficultyPoints[this.currentTolakDifficulty]
+        sounds.correct()
+      } else {
+        this.tolakWrongQuestions.push(this.currentProblem)
+        sounds.wrong()
+      }
+
+      Alpine.store('profile').updateStats('subtract', this.currentTolakDifficulty, isCorrect)
+      this.tolakCurrentIndex++
+
+      setTimeout(() => {
+        if (this.isPlaying) {
+          this.nextTolakProblem()
+        }
+      }, isCorrect ? 500 : 1000)
+    },
+
+    advanceToNextTolakDifficulty() {
+      const difficulties = ['easy', 'medium', 'hard']
+      const currentIndex = difficulties.indexOf(this.currentTolakDifficulty)
+
+      if (currentIndex >= difficulties.length - 1) {
+        // Completed all difficulties!
+        this.tolakCompleted = true
+        sounds.levelUp()
+        this.endGame()
+      } else {
+        // Move to next difficulty
+        sounds.levelUp()
+        this.currentTolakDifficulty = difficulties[currentIndex + 1]
+        this.initTolakQuestions()
+        this.nextTolakProblem()
       }
     },
 

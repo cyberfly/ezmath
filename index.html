@@ -5,6 +5,15 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧮</text></svg>" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>EzMath - Fun Math for Kids!</title>
+
+  <!-- PWA Meta Tags -->
+  <meta name="description" content="Kid-friendly math learning game with multiple game modes and progress tracking">
+  <meta name="theme-color" content="#9333ea">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="EzMath">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -176,7 +185,35 @@
             </div>
           </button>
 
-          <!-- Practice Mode -->
+          <!-- Tambah Mode (Addition by Difficulty) -->
+          <button
+            @click="selectedMode = 'tambah'; view = 'settings'"
+            class="w-full p-5 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 transition-all shadow-lg hover:shadow-xl"
+          >
+            <div class="flex items-center gap-4">
+              <span class="text-4xl">➕</span>
+              <div class="text-left">
+                <div class="font-bold text-xl">Tambah</div>
+                <div class="text-blue-200 text-sm">Master addition through all levels!</div>
+              </div>
+            </div>
+          </button>
+
+          <!-- Tolak Mode (Subtraction by Difficulty) -->
+          <button
+            @click="selectedMode = 'tolak'; view = 'settings'"
+            class="w-full p-5 rounded-2xl bg-gradient-to-r from-rose-500 to-red-500 text-white hover:from-rose-600 hover:to-red-600 transition-all shadow-lg hover:shadow-xl"
+          >
+            <div class="flex items-center gap-4">
+              <span class="text-4xl">➖</span>
+              <div class="text-left">
+                <div class="font-bold text-xl">Tolak</div>
+                <div class="text-rose-200 text-sm">Master subtraction through all levels!</div>
+              </div>
+            </div>
+          </button>
+
+          <!-- All Operations Mode -->
           <button
             @click="selectedMode = 'practice'; view = 'settings'"
             class="w-full p-5 rounded-2xl bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-102"
@@ -184,8 +221,8 @@
             <div class="flex items-center gap-4">
               <span class="text-4xl">🎯</span>
               <div class="text-left">
-                <div class="font-bold text-xl">Practice</div>
-                <div class="text-purple-200 text-sm">No time limit, just learn!</div>
+                <div class="font-bold text-xl">All Operations</div>
+                <div class="text-purple-200 text-sm">Mix all 4 operations - no time limit!</div>
               </div>
             </div>
           </button>
@@ -243,15 +280,17 @@
         <button @click="view = 'menu'" class="text-2xl mb-4 hover:scale-110 transition-transform">←</button>
 
         <h2 class="text-2xl font-bold text-purple-600 mb-6 text-center">
-          <span x-show="selectedMode === 'practice'">🎯 Practice Settings</span>
+          <span x-show="selectedMode === 'practice'">🎯 All Operations</span>
           <span x-show="selectedMode === 'timed'">⏱️ Timed Challenge</span>
           <span x-show="selectedMode === 'level'">🏆 Level Mode</span>
           <span x-show="selectedMode === 'sifir'">✖️ Darab Mode</span>
           <span x-show="selectedMode === 'bahagi'">➗ Bahagi Mode</span>
+          <span x-show="selectedMode === 'tambah'">➕ Tambah Mode</span>
+          <span x-show="selectedMode === 'tolak'">➖ Tolak Mode</span>
         </h2>
 
-        <!-- Difficulty (not for level, sifir, or bahagi mode) -->
-        <div x-show="selectedMode !== 'level' && selectedMode !== 'sifir' && selectedMode !== 'bahagi'" class="mb-6">
+        <!-- Difficulty (for practice, timed, tambah, and tolak modes only) -->
+        <div x-show="selectedMode === 'practice' || selectedMode === 'timed' || selectedMode === 'tambah' || selectedMode === 'tolak'" class="mb-6">
           <h3 class="font-bold text-gray-700 mb-3">Difficulty</h3>
           <div class="flex gap-2">
             <template x-for="(config, key) in DIFFICULTY_CONFIG" :key="key">
@@ -265,8 +304,8 @@
           </div>
         </div>
 
-        <!-- Operations (not for level, sifir, or bahagi mode) -->
-        <div x-show="selectedMode !== 'level' && selectedMode !== 'sifir' && selectedMode !== 'bahagi'" class="mb-6">
+        <!-- Operations (for practice and timed modes only) -->
+        <div x-show="selectedMode === 'practice' || selectedMode === 'timed'" class="mb-6">
           <h3 class="font-bold text-gray-700 mb-3">Operations</h3>
           <div class="flex gap-2 justify-center">
             <template x-for="(symbol, op) in OPERATION_SYMBOLS" :key="op">
@@ -329,6 +368,28 @@
           </p>
         </div>
 
+        <!-- Tambah Mode Info -->
+        <div x-show="selectedMode === 'tambah'" class="mb-6 bg-blue-50 p-4 rounded-xl">
+          <p class="text-gray-600">
+            Master addition through all difficulty levels! Start with Easy (1-10),
+            then progress to Medium (1-50), and finally Hard (1-100).
+          </p>
+          <p class="mt-2 text-gray-600">
+            12 questions per level. Wrong answers repeat until you get them all correct!
+          </p>
+        </div>
+
+        <!-- Tolak Mode Info -->
+        <div x-show="selectedMode === 'tolak'" class="mb-6 bg-rose-50 p-4 rounded-xl">
+          <p class="text-gray-600">
+            Master subtraction through all difficulty levels! Start with Easy (1-10),
+            then progress to Medium (1-50), and finally Hard (1-100).
+          </p>
+          <p class="mt-2 text-gray-600">
+            12 questions per level. Wrong answers repeat until you get them all correct!
+          </p>
+        </div>
+
         <button @click="startGame()" class="btn w-full text-xl py-4"
           :class="{
             'btn-primary': selectedMode === 'practice',
@@ -336,12 +397,14 @@
             'btn-pink': selectedMode === 'level',
             'bg-amber-500 hover:bg-amber-600': selectedMode === 'sifir',
             'bg-emerald-500 hover:bg-emerald-600': selectedMode === 'bahagi',
-            'opacity-50 cursor-not-allowed': selectedMode !== 'level' && selectedMode !== 'sifir' && selectedMode !== 'bahagi' && selectedOperations.length === 0
+            'bg-blue-500 hover:bg-blue-600': selectedMode === 'tambah',
+            'bg-rose-500 hover:bg-rose-600': selectedMode === 'tolak',
+            'opacity-50 cursor-not-allowed': (selectedMode === 'practice' || selectedMode === 'timed') && selectedOperations.length === 0
           }"
-          :disabled="selectedMode !== 'level' && selectedMode !== 'sifir' && selectedMode !== 'bahagi' && selectedOperations.length === 0"
+          :disabled="(selectedMode === 'practice' || selectedMode === 'timed') && selectedOperations.length === 0"
         >
-          <span x-show="selectedMode !== 'level' && selectedMode !== 'sifir' && selectedMode !== 'bahagi' && selectedOperations.length === 0">Select an operation</span>
-          <span x-show="selectedMode === 'level' || selectedMode === 'sifir' || selectedMode === 'bahagi' || selectedOperations.length > 0">Start! 🚀</span>
+          <span x-show="(selectedMode === 'practice' || selectedMode === 'timed') && selectedOperations.length === 0">Select an operation</span>
+          <span x-show="selectedMode === 'level' || selectedMode === 'sifir' || selectedMode === 'bahagi' || selectedMode === 'tambah' || selectedMode === 'tolak' || selectedOperations.length > 0">Start! 🚀</span>
         </button>
       </div>
     </div>
@@ -377,6 +440,18 @@
             <div x-show="$store.game.mode === 'bahagi'" class="flex items-center gap-2 bg-emerald-100 px-4 py-2 rounded-full">
               <span class="text-2xl">➗</span>
               <span class="font-bold text-xl text-emerald-600">Bahagi <span x-text="$store.game.currentBahagi"></span></span>
+            </div>
+
+            <!-- Tambah mode: show current difficulty -->
+            <div x-show="$store.game.mode === 'tambah'" class="flex items-center gap-2 bg-blue-100 px-4 py-2 rounded-full">
+              <span class="text-2xl">➕</span>
+              <span class="font-bold text-xl text-blue-600 capitalize" x-text="$store.game.currentTambahDifficulty"></span>
+            </div>
+
+            <!-- Tolak mode: show current difficulty -->
+            <div x-show="$store.game.mode === 'tolak'" class="flex items-center gap-2 bg-rose-100 px-4 py-2 rounded-full">
+              <span class="text-2xl">➖</span>
+              <span class="font-bold text-xl text-rose-600 capitalize" x-text="$store.game.currentTolakDifficulty"></span>
             </div>
           </div>
 
@@ -422,6 +497,32 @@
           </div>
         </div>
 
+        <!-- Progress for tambah mode -->
+        <div x-show="$store.game.mode === 'tambah'" class="mb-4">
+          <div class="progress-bar">
+            <div class="progress-bar-fill bg-gradient-to-r from-blue-500 to-indigo-500" :style="'width: ' + $store.game.tambahProgress + '%'"></div>
+          </div>
+          <div class="text-sm text-gray-500 mt-1">
+            <span x-text="$store.game.tambahQuestionsRemaining"></span> questions remaining
+            <span x-show="$store.game.tambahWrongQuestions.length > 0" class="text-blue-600">
+              (<span x-text="$store.game.tambahWrongQuestions.length"></span> to retry)
+            </span>
+          </div>
+        </div>
+
+        <!-- Progress for tolak mode -->
+        <div x-show="$store.game.mode === 'tolak'" class="mb-4">
+          <div class="progress-bar">
+            <div class="progress-bar-fill bg-gradient-to-r from-rose-500 to-red-500" :style="'width: ' + $store.game.tolakProgress + '%'"></div>
+          </div>
+          <div class="text-sm text-gray-500 mt-1">
+            <span x-text="$store.game.tolakQuestionsRemaining"></span> questions remaining
+            <span x-show="$store.game.tolakWrongQuestions.length > 0" class="text-rose-600">
+              (<span x-text="$store.game.tolakWrongQuestions.length"></span> to retry)
+            </span>
+          </div>
+        </div>
+
         <!-- Problem Display -->
         <div class="py-8" :class="{ 'animate-shake': $store.game.showFeedback && $store.game.lastResult === 'incorrect' }">
           <div class="text-6xl font-bold mb-8 flex items-center justify-center gap-4"
@@ -442,13 +543,23 @@
             <input
               type="number"
               x-model="$store.game.userAnswer"
-              @keyup.enter="$store.game.mode === 'sifir' ? $store.game.submitSifirAnswer() : ($store.game.mode === 'bahagi' ? $store.game.submitBahagiAnswer() : $store.game.submitAnswer())"
+              @keyup.enter="
+                $store.game.mode === 'sifir' ? $store.game.submitSifirAnswer() :
+                ($store.game.mode === 'bahagi' ? $store.game.submitBahagiAnswer() :
+                ($store.game.mode === 'tambah' ? $store.game.submitTambahAnswer() :
+                ($store.game.mode === 'tolak' ? $store.game.submitTolakAnswer() :
+                $store.game.submitAnswer())))"
               x-effect="if (!$store.game.showFeedback && $store.game.isPlaying) $nextTick(() => $el.focus())"
               class="answer-input"
               placeholder="?"
             />
             <button
-              @click="$store.game.mode === 'sifir' ? $store.game.submitSifirAnswer() : ($store.game.mode === 'bahagi' ? $store.game.submitBahagiAnswer() : $store.game.submitAnswer())"
+              @click="
+                $store.game.mode === 'sifir' ? $store.game.submitSifirAnswer() :
+                ($store.game.mode === 'bahagi' ? $store.game.submitBahagiAnswer() :
+                ($store.game.mode === 'tambah' ? $store.game.submitTambahAnswer() :
+                ($store.game.mode === 'tolak' ? $store.game.submitTolakAnswer() :
+                $store.game.submitAnswer())))"
               class="btn btn-success text-2xl px-8"
               :disabled="!$store.game.userAnswer"
             >
@@ -491,11 +602,15 @@
           <span x-show="$store.game.mode === 'timed'">⏱️ Time's Up!</span>
           <span x-show="$store.game.mode === 'level' && $store.game.correctInLevel >= $store.game.levelPassThreshold">🎉 Level Complete!</span>
           <span x-show="$store.game.mode === 'level' && $store.game.correctInLevel < $store.game.levelPassThreshold">Keep Practicing!</span>
-          <span x-show="$store.game.mode === 'practice'">Great Practice!</span>
+          <span x-show="$store.game.mode === 'practice'">Awesome Work!</span>
           <span x-show="$store.game.mode === 'sifir' && $store.game.sifirCompleted">🏆 All Darab Mastered!</span>
           <span x-show="$store.game.mode === 'sifir' && !$store.game.sifirCompleted">✖️ Darab <span x-text="$store.game.currentSifir"></span> Complete!</span>
           <span x-show="$store.game.mode === 'bahagi' && $store.game.bahagiCompleted">🏆 All Bahagi Mastered!</span>
           <span x-show="$store.game.mode === 'bahagi' && !$store.game.bahagiCompleted">➗ Bahagi <span x-text="$store.game.currentBahagi"></span> Complete!</span>
+          <span x-show="$store.game.mode === 'tambah' && $store.game.tambahCompleted">🏆 All Tambah Levels Mastered!</span>
+          <span x-show="$store.game.mode === 'tambah' && !$store.game.tambahCompleted">➕ <span class="capitalize" x-text="$store.game.currentTambahDifficulty"></span> Tambah Complete!</span>
+          <span x-show="$store.game.mode === 'tolak' && $store.game.tolakCompleted">🏆 All Tolak Levels Mastered!</span>
+          <span x-show="$store.game.mode === 'tolak' && !$store.game.tolakCompleted">➖ <span class="capitalize" x-text="$store.game.currentTolakDifficulty"></span> Tolak Complete!</span>
         </h2>
 
         <div class="text-6xl my-6">

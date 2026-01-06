@@ -50,5 +50,5 @@ Single-page app with view switching in `index.html`. Views are controlled by `x-
 
 - **Alpine x-data must be defined in main.js**, not inline in HTML templates
 - Constants (`AVATARS`, `DIFFICULTY_CONFIG`, `OPERATION_SYMBOLS`) are exposed on `window` for template access
-- Game modes: `practice` (endless), `timed` (countdown), `level` (progression)
+- Game modes: `practice` (All Operations - mix all 4 operations with no time limit), `timed` (timed challenge), `level` (level progression), `sifir` (multiplication tables), `bahagi` (division tables), `tambah` (addition by difficulty), `tolak` (subtraction by difficulty)
 - Difficulty levels: `easy`, `medium`, `hard` with different number ranges and operations
