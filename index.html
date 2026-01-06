@@ -585,14 +585,16 @@
           <div x-show="!$store.game.showFeedback" class="flex items-center justify-center gap-4">
             <input
               type="number"
+              inputmode="numeric"
               x-model="$store.game.userAnswer"
+              x-ref="answerInput"
+              x-init="$store.game.registerInput($refs.answerInput)"
               @keyup.enter="
                 $store.game.mode === 'sifir' ? $store.game.submitSifirAnswer() :
                 ($store.game.mode === 'bahagi' ? $store.game.submitBahagiAnswer() :
                 ($store.game.mode === 'tambah' ? $store.game.submitTambahAnswer() :
                 ($store.game.mode === 'tolak' ? $store.game.submitTolakAnswer() :
                 $store.game.submitAnswer())))"
-              x-effect="if (!$store.game.showFeedback && $store.game.isPlaying) $nextTick(() => $el.focus())"
               class="answer-input"
               placeholder="?"
             />

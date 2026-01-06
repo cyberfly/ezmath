@@ -16,6 +16,7 @@ function createGameStore(Alpine) {
     isPaused: false,
     currentProblem: null,
     userAnswer: '',
+    inputElement: null, // Reference to the answer input element
 
     // Score tracking
     score: 0,
@@ -135,6 +136,23 @@ function createGameStore(Alpine) {
     },
 
     // Methods
+    registerInput(element) {
+      this.inputElement = element
+      // Focus immediately when registered
+      if (this.isPlaying && !this.showFeedback) {
+        setTimeout(() => element?.focus(), 100)
+      }
+    },
+
+    focusInput() {
+      if (this.inputElement && !this.showFeedback && this.isPlaying) {
+        // Use setTimeout to ensure it happens after DOM updates and outside any restricted context
+        setTimeout(() => {
+          this.inputElement?.focus()
+        }, 100)
+      }
+    },
+
     startGame(mode, settings = {}) {
       this.mode = mode
       this.difficulty = settings.difficulty || 'easy'
@@ -204,6 +222,7 @@ function createGameStore(Alpine) {
       this.currentProblem = generateProblem(this.difficulty, this.operations)
       this.userAnswer = ''
       this.showFeedback = false
+      this.focusInput()
     },
 
     submitAnswer() {
@@ -455,6 +474,7 @@ function createGameStore(Alpine) {
       }
       this.userAnswer = ''
       this.showFeedback = false
+      this.focusInput()
     },
 
     submitSifirAnswer() {
@@ -547,6 +567,7 @@ function createGameStore(Alpine) {
       }
       this.userAnswer = ''
       this.showFeedback = false
+      this.focusInput()
     },
 
     submitBahagiAnswer() {
@@ -660,6 +681,7 @@ function createGameStore(Alpine) {
       }
       this.userAnswer = ''
       this.showFeedback = false
+      this.focusInput()
     },
 
     submitTambahAnswer() {
@@ -730,6 +752,7 @@ function createGameStore(Alpine) {
       }
       this.userAnswer = ''
       this.showFeedback = false
+      this.focusInput()
     },
 
     submitTolakAnswer() {
