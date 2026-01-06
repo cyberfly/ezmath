@@ -319,6 +319,9 @@ function createGameStore(Alpine) {
         }
       }
 
+      // Clear current problem before saving so resume will fetch the next problem
+      this.currentProblem = null
+
       // Save session progress
       this.saveSessionToProfile()
 
@@ -567,6 +570,9 @@ function createGameStore(Alpine) {
       // Move to next question
       this.sifirCurrentIndex++
 
+      // Clear current problem before saving so resume will fetch the next problem
+      this.currentProblem = null
+
       // Save session progress
       this.saveSessionToProfile()
 
@@ -663,6 +669,9 @@ function createGameStore(Alpine) {
 
       // Move to next question
       this.bahagiCurrentIndex++
+
+      // Clear current problem before saving so resume will fetch the next problem
+      this.currentProblem = null
 
       // Save session progress
       this.saveSessionToProfile()
@@ -773,6 +782,9 @@ function createGameStore(Alpine) {
       this.applyPetStatusUpdate(petUpdate)
       this.tambahCurrentIndex++
 
+      // Clear current problem before saving so resume will fetch the next problem
+      this.currentProblem = null
+
       // Save session progress
       this.saveSessionToProfile()
 
@@ -847,6 +859,9 @@ function createGameStore(Alpine) {
       const petUpdate = Alpine.store('profile').updateStats('subtract', this.currentTolakDifficulty, isCorrect)
       this.applyPetStatusUpdate(petUpdate)
       this.tolakCurrentIndex++
+
+      // Clear current problem before saving so resume will fetch the next problem
+      this.currentProblem = null
 
       // Save session progress
       this.saveSessionToProfile()
