@@ -17,8 +17,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="/ezmath/assets/index-B8PTbLUl.js"></script>
-  <link rel="stylesheet" crossorigin href="/ezmath/assets/index-Cy9qS3ek.css">
+  <script type="module" crossorigin src="/ezmath/assets/index-DhjOgAMD.js"></script>
+  <link rel="stylesheet" crossorigin href="/ezmath/assets/index-DPHxjkKA.css">
 </head>
 <body>
   <div id="app" x-data="{}" x-init="$store.profile.activeProfile?.equippedItems?.theme && Themes.applyTheme($store.profile.activeProfile.equippedItems.theme)">
@@ -525,65 +525,57 @@
     <div x-show="$store.view.current === 'game'" x-cloak class="min-h-screen flex items-center justify-center p-4">
       <div class="card max-w-lg w-full text-center">
         <!-- Game Header -->
-        <div class="flex items-center justify-between mb-6">
-          <button @click="$store.view.goHome()" class="text-2xl hover:scale-110 transition-transform">✕</button>
+        <div class="flex items-center justify-between gap-2 mb-4 flex-nowrap">
+          <button @click="$store.view.goHome()" class="text-xl sm:text-2xl hover:scale-110 transition-transform shrink-0">✕</button>
 
           <!-- Mode-specific info -->
-          <div class="flex items-center gap-4">
+          <div class="flex items-center justify-center gap-2 sm:gap-4 flex-1 min-w-0 flex-nowrap">
             <!-- Timed mode: show timer -->
-            <div x-show="$store.game.mode === 'timed'" class="flex items-center gap-2 bg-cyan-100 px-4 py-2 rounded-full">
-              <span class="text-2xl">⏱️</span>
-              <span class="font-bold text-xl text-cyan-600" x-text="$store.game.formattedTime"></span>
+            <div x-show="$store.game.mode === 'timed'" class="flex items-center gap-2 bg-cyan-100 px-2 py-1 sm:px-4 sm:py-2 rounded-full min-w-0">
+              <span class="text-xl sm:text-2xl">⏱️</span>
+              <span class="font-bold text-base sm:text-xl text-cyan-600 truncate" x-text="$store.game.formattedTime"></span>
             </div>
 
             <!-- Level mode: show level -->
-            <div x-show="$store.game.mode === 'level'" class="flex items-center gap-2 bg-pink-100 px-4 py-2 rounded-full">
-              <span class="text-2xl">🏆</span>
-              <span class="font-bold text-xl text-pink-600">Level <span x-text="$store.game.currentLevel"></span></span>
+            <div x-show="$store.game.mode === 'level'" class="flex items-center gap-2 bg-pink-100 px-2 py-1 sm:px-4 sm:py-2 rounded-full min-w-0">
+              <span class="text-xl sm:text-2xl">🏆</span>
+              <span class="font-bold text-base sm:text-xl text-pink-600 truncate">Level <span x-text="$store.game.currentLevel"></span></span>
             </div>
 
             <!-- Darab mode: show current table -->
-            <div x-show="$store.game.mode === 'sifir'" class="flex items-center gap-2 bg-amber-100 px-4 py-2 rounded-full">
-              <span class="text-2xl">✖️</span>
-              <span class="font-bold text-xl text-amber-600">Darab <span x-text="$store.game.currentSifir"></span></span>
+            <div x-show="$store.game.mode === 'sifir'" class="flex items-center gap-2 bg-amber-100 px-2 py-1 sm:px-4 sm:py-2 rounded-full min-w-0">
+              <span class="text-xl sm:text-2xl">✖️</span>
+              <span class="font-bold text-base sm:text-xl text-amber-600 truncate">Darab <span x-text="$store.game.currentSifir"></span></span>
             </div>
 
             <!-- Bahagi mode: show current table -->
-            <div x-show="$store.game.mode === 'bahagi'" class="flex items-center gap-2 bg-emerald-100 px-4 py-2 rounded-full">
-              <span class="text-2xl">➗</span>
-              <span class="font-bold text-xl text-emerald-600">Bahagi <span x-text="$store.game.currentBahagi"></span></span>
+            <div x-show="$store.game.mode === 'bahagi'" class="flex items-center gap-2 bg-emerald-100 px-2 py-1 sm:px-4 sm:py-2 rounded-full min-w-0">
+              <span class="text-xl sm:text-2xl">➗</span>
+              <span class="font-bold text-base sm:text-xl text-emerald-600 truncate">Bahagi <span x-text="$store.game.currentBahagi"></span></span>
             </div>
 
             <!-- Tambah mode: show current difficulty -->
-            <div x-show="$store.game.mode === 'tambah'" class="flex items-center gap-2 bg-blue-100 px-4 py-2 rounded-full">
-              <span class="text-2xl">➕</span>
-              <span class="font-bold text-xl text-blue-600 capitalize" x-text="$store.game.currentTambahDifficulty"></span>
+            <div x-show="$store.game.mode === 'tambah'" class="flex items-center gap-2 bg-blue-100 px-2 py-1 sm:px-4 sm:py-2 rounded-full min-w-0">
+              <span class="text-xl sm:text-2xl">➕</span>
+              <span class="font-bold text-base sm:text-xl text-blue-600 capitalize truncate" x-text="$store.game.currentTambahDifficulty"></span>
             </div>
 
             <!-- Tolak mode: show current difficulty -->
-            <div x-show="$store.game.mode === 'tolak'" class="flex items-center gap-2 bg-rose-100 px-4 py-2 rounded-full">
-              <span class="text-2xl">➖</span>
-              <span class="font-bold text-xl text-rose-600 capitalize" x-text="$store.game.currentTolakDifficulty"></span>
+            <div x-show="$store.game.mode === 'tolak'" class="flex items-center gap-2 bg-rose-100 px-2 py-1 sm:px-4 sm:py-2 rounded-full min-w-0">
+              <span class="text-xl sm:text-2xl">➖</span>
+              <span class="font-bold text-base sm:text-xl text-rose-600 capitalize truncate" x-text="$store.game.currentTolakDifficulty"></span>
             </div>
           </div>
 
-          <div class="flex items-center gap-4">
-            <div class="flex items-center gap-2 bg-amber-100 px-4 py-2 rounded-full">
-              <span class="text-xl">⭐</span>
-              <span class="font-bold text-lg text-amber-600" x-text="$store.game.starsEarned"></span>
+          <div class="flex items-center gap-2 sm:gap-4 shrink-0 flex-nowrap">
+            <div class="flex items-center gap-1.5 bg-amber-100 px-2 py-1 sm:px-4 sm:py-2 rounded-full">
+              <span class="text-base sm:text-xl">⭐</span>
+              <span class="font-bold text-sm sm:text-lg text-amber-600" x-text="$store.game.starsEarned"></span>
             </div>
-            <div class="flex items-center gap-2 bg-purple-100 px-4 py-2 rounded-full">
-              <span class="text-xl">📊</span>
-              <span class="font-bold text-lg text-purple-600" x-text="$store.game.score"></span>
+            <div class="flex items-center gap-1.5 bg-purple-100 px-2 py-1 sm:px-4 sm:py-2 rounded-full">
+              <span class="text-base sm:text-xl">📊</span>
+              <span class="font-bold text-sm sm:text-lg text-purple-600" x-text="$store.game.score"></span>
             </div>
-          </div>
-        </div>
-
-        <!-- Game ID Display -->
-        <div class="mb-4 text-center">
-          <div class="inline-flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-full">
-            <span class="text-xs text-gray-500">Game ID:</span>
-            <span class="text-xs font-mono text-gray-700" x-text="$store.game.gameId"></span>
           </div>
         </div>
 
@@ -729,6 +721,14 @@
                  :class="$store.game.accuracy >= 80 ? 'text-green-500' : ($store.game.accuracy >= 50 ? 'text-yellow-500' : 'text-red-500')"
                  x-text="$store.game.accuracy + '%'"></div>
             <div class="text-xs text-gray-500">Accuracy</div>
+          </div>
+        </div>
+
+        <!-- Game ID Display -->
+        <div class="mt-4 text-center">
+          <div class="inline-flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-full">
+            <span class="text-xs text-gray-500">Game ID:</span>
+            <span class="text-xs font-mono text-gray-700" x-text="$store.game.gameId"></span>
           </div>
         </div>
       </div>
