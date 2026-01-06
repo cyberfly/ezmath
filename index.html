@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧮</text></svg>" />
+  <link rel="icon" href="/ezmath/logo.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>EzMath - Fun Math for Kids!</title>
 
@@ -17,8 +17,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="/ezmath/assets/index-CQicUrJR.js"></script>
-  <link rel="stylesheet" crossorigin href="/ezmath/assets/index-CX4FYU07.css">
+  <script type="module" crossorigin src="/ezmath/assets/index-M-CLj0ut.js"></script>
+  <link rel="stylesheet" crossorigin href="/ezmath/assets/index-Cy9qS3ek.css">
 </head>
 <body>
   <div id="app" x-data="{}" x-init="$store.profile.activeProfile?.equippedItems?.theme && Themes.applyTheme($store.profile.activeProfile.equippedItems.theme)">
@@ -26,7 +26,9 @@
     <!-- Profile Selection Screen -->
     <div x-show="$store.view.current === 'home'" x-cloak class="min-h-screen flex items-center justify-center p-4">
       <div class="card max-w-md w-full text-center">
-        <h1 class="text-4xl font-extrabold text-purple-600 mb-2">🧮 EzMath</h1>
+        <div class="mb-4 flex justify-center">
+          <img src="/ezmath/logo.png" alt="EzMath Logo" class="w-48 h-48 rounded-full" />
+        </div>
         <p class="text-gray-500 mb-6">Fun math practice for everyone!</p>
 
         <!-- PWA Install Button -->
@@ -146,7 +148,10 @@
         <h2 class="text-2xl font-bold text-purple-600 mb-6">Choose Your Game</h2>
 
         <!-- Pet Display -->
-        <div class="mb-6 bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-2xl border-2 border-purple-200">
+        <div
+          @click="$store.view.current = 'pet'"
+          class="mb-6 bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-2xl border-2 border-purple-200 cursor-pointer hover:shadow-lg hover:border-purple-300 transition-all"
+        >
           <div class="flex items-center gap-4">
             <div class="text-6xl" x-text="PetSystem.getPetEmoji($store.profile.activeProfile?.pet?.stage || 0)"></div>
             <div class="flex-1">
@@ -164,7 +169,7 @@
                 </div>
               </div>
             </div>
-            <button @click="$store.view.current = 'pet'" class="text-3xl hover:scale-110 transition-transform">→</button>
+            <div class="text-3xl text-purple-500">→</div>
           </div>
         </div>
 
