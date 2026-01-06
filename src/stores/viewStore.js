@@ -16,6 +16,9 @@ function createViewStore(Alpine) {
     newProfileName: '',
     newProfileAvatar: '🦊',
 
+    // PWA install prompt (not persisted)
+    showPWAInstall: false,
+
     // Navigate to a view
     goTo(viewName) {
       this.current = viewName

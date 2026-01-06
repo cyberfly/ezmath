@@ -36,6 +36,39 @@ setTimeout(() => {
   Alpine.store('game').init()
 }, 0)
 
+// PWA Install prompt management
+let deferredPrompt = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  // Prevent the mini-infobar from appearing on mobile
+  e.preventDefault();
+  // Store the event so it can be triggered later
+  deferredPrompt = e;
+  // Update Alpine store to show install button
+  Alpine.store('view').showPWAInstall = true;
+});
+
+window.addEventListener('appinstalled', () => {
+  // Hide the install button when app is installed
+  Alpine.store('view').showPWAInstall = false;
+  deferredPrompt = null;
+});
+
+// Expose install function globally
+window.installPWA = async () => {
+  if (!deferredPrompt) {
+    return;
+  }
+  // Show the install prompt
+  deferredPrompt.prompt();
+  // Wait for the user to respond to the prompt
+  const { outcome } = await deferredPrompt.userChoice;
+  console.log(`User response to the install prompt: ${outcome}`);
+  // Clear the deferred prompt
+  deferredPrompt = null;
+  Alpine.store('view').showPWAInstall = false;
+};
+
 // Register service worker for PWA
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
