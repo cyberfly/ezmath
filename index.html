@@ -407,7 +407,9 @@
 
         <!-- Previous Sessions -->
         <div x-data="{
-          sessions: $store.profile.getIncompleteSessionsByMode($store.view.selectedMode),
+          get sessions() {
+            return $store.profile.getIncompleteSessionsByMode($store.view.selectedMode);
+          },
           formatTime(timestamp) {
             const date = new Date(timestamp);
             const now = new Date();
@@ -422,7 +424,6 @@
             return `${diffDays}d ago`;
           }
         }"
-        x-init="sessions = $store.profile.getIncompleteSessionsByMode($store.view.selectedMode)"
         class="mb-6">
           <template x-if="sessions.length > 0">
             <div>
@@ -439,7 +440,7 @@
                         <span class="text-xs text-gray-500" x-text="formatTime(session.lastUpdated)"></span>
                       </div>
                       <button
-                        @click="$store.profile.deleteSession(session.gameId); sessions = $store.profile.getIncompleteSessionsByMode($store.view.selectedMode)"
+                        @click="$store.profile.deleteSession(session.gameId)"
                         class="text-red-400 hover:text-red-600 text-sm"
                         title="Delete session"
                       >
