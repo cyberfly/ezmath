@@ -17,67 +17,26 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="/ezmath/assets/index-CmlgQysk.js"></script>
+  <script type="module" crossorigin src="/ezmath/assets/index-YHWQoCtW.js"></script>
   <link rel="stylesheet" crossorigin href="/ezmath/assets/index-_zRLTV2j.css">
 </head>
 <body>
-  <div id="app" x-data="{
-    view: 'home',
-    showCreateProfile: false,
-    newProfileName: '',
-    newProfileAvatar: '🦊',
-
-    // Game settings
-    selectedMode: null,
-    selectedDifficulty: 'easy',
-    selectedOperations: ['add', 'subtract'],
-    selectedTime: 60,
-
-    toggleOperation(op) {
-      const idx = this.selectedOperations.indexOf(op);
-      if (idx > -1) {
-        // Allow deselecting even if it's the only one - can select just one topic
-        this.selectedOperations.splice(idx, 1);
-      } else {
-        this.selectedOperations.push(op);
-      }
-    },
-
-    startGame() {
-      $store.game.startGame(this.selectedMode, {
-        difficulty: this.selectedDifficulty,
-        operations: this.selectedOperations,
-        timeLimit: this.selectedTime,
-        startLevel: 1
-      });
-      this.view = 'game';
-    },
-
-    goHome() {
-      $store.game.reset();
-      this.view = 'menu';
-    }
-  }" x-init="
-    // Apply saved theme on load
-    if ($store.profile.activeProfile?.equippedItems?.theme) {
-      Themes.applyTheme($store.profile.activeProfile.equippedItems.theme);
-    }
-  ">
+  <div id="app" x-data="{}" x-init="$store.profile.activeProfile?.equippedItems?.theme && Themes.applyTheme($store.profile.activeProfile.equippedItems.theme)">
 
     <!-- Profile Selection Screen -->
-    <div x-show="view === 'home'" x-cloak class="min-h-screen flex items-center justify-center p-4">
+    <div x-show="$store.view.current === 'home'" x-cloak class="min-h-screen flex items-center justify-center p-4">
       <div class="card max-w-md w-full text-center">
         <h1 class="text-4xl font-extrabold text-purple-600 mb-2">🧮 EzMath</h1>
         <p class="text-gray-500 mb-6">Fun math practice for everyone!</p>
 
         <!-- Existing Profiles -->
-        <template x-if="$store.profile.hasProfiles && !showCreateProfile">
+        <template x-if="$store.profile.hasProfiles && !$store.view.showCreateProfile">
           <div>
             <h2 class="text-xl font-bold text-gray-700 mb-4">Who's playing?</h2>
             <div class="space-y-3 mb-6">
               <template x-for="profile in $store.profile.profiles" :key="profile.id">
                 <button
-                  @click="$store.profile.selectProfile(profile.id); view = 'menu'"
+                  @click="$store.profile.selectProfile(profile.id); $store.view.current = 'menu'"
                   class="w-full flex items-center gap-4 p-4 rounded-2xl bg-purple-50 hover:bg-purple-100 transition-all border-2 border-transparent hover:border-purple-300"
                 >
                   <span class="text-4xl" x-text="profile.avatar"></span>
@@ -91,21 +50,21 @@
                 </button>
               </template>
             </div>
-            <button @click="showCreateProfile = true" class="btn btn-secondary w-full">
+            <button @click="$store.view.showCreateProfile = true" class="btn btn-secondary w-full">
               + Add Player
             </button>
           </div>
         </template>
 
         <!-- Create Profile Form -->
-        <template x-if="!$store.profile.hasProfiles || showCreateProfile">
+        <template x-if="!$store.profile.hasProfiles || $store.view.showCreateProfile">
           <div>
             <h2 class="text-xl font-bold text-gray-700 mb-4" x-text="$store.profile.hasProfiles ? 'Add New Player' : 'Create Your Profile'"></h2>
 
             <div class="mb-4">
               <input
                 type="text"
-                x-model="newProfileName"
+                x-model="$store.view.newProfileName"
                 placeholder="Your name"
                 class="w-full px-4 py-3 text-lg rounded-xl border-2 border-purple-200 focus:border-purple-500 focus:outline-none text-center"
                 maxlength="20"
@@ -117,9 +76,9 @@
               <div class="flex flex-wrap justify-center gap-2">
                 <template x-for="avatar in AVATARS" :key="avatar">
                   <button
-                    @click="newProfileAvatar = avatar"
+                    @click="$store.view.newProfileAvatar = avatar"
                     class="avatar-btn"
-                    :class="{ 'selected': newProfileAvatar === avatar }"
+                    :class="{ 'selected': $store.view.newProfileAvatar === avatar }"
                     x-text="avatar"
                   ></button>
                 </template>
@@ -129,16 +88,16 @@
             <div class="flex gap-3">
               <button
                 x-show="$store.profile.hasProfiles"
-                @click="showCreateProfile = false"
+                @click="$store.view.showCreateProfile = false"
                 class="btn bg-gray-300 hover:bg-gray-400 flex-1"
               >
                 Cancel
               </button>
               <button
-                @click="if(newProfileName.trim()) { $store.profile.createProfile(newProfileName, newProfileAvatar); newProfileName = ''; showCreateProfile = false; view = 'menu'; }"
-                :disabled="!newProfileName.trim()"
+                @click="if($store.view.newProfileName.trim()) { $store.profile.createProfile($store.view.newProfileName, $store.view.newProfileAvatar); $store.view.newProfileName = ''; $store.view.showCreateProfile = false; $store.view.current = 'menu'; }"
+                :disabled="!$store.view.newProfileName.trim()"
                 class="btn btn-primary flex-1"
-                :class="{ 'opacity-50 cursor-not-allowed': !newProfileName.trim() }"
+                :class="{ 'opacity-50 cursor-not-allowed': !$store.view.newProfileName.trim() }"
               >
                 Let's Go!
               </button>
@@ -149,11 +108,11 @@
     </div>
 
     <!-- Main Menu -->
-    <div x-show="view === 'menu'" x-cloak class="min-h-screen flex items-center justify-center p-4">
+    <div x-show="$store.view.current === 'menu'" x-cloak class="min-h-screen flex items-center justify-center p-4">
       <div class="card max-w-md w-full text-center">
         <!-- Profile Header -->
         <div class="flex items-center justify-between mb-6">
-          <button @click="view = 'home'" class="text-2xl hover:scale-110 transition-transform">←</button>
+          <button @click="$store.view.current = 'home'" class="text-2xl hover:scale-110 transition-transform">←</button>
           <div class="flex flex-col items-center gap-1">
             <div class="flex items-center gap-2">
               <span class="text-3xl" x-text="$store.profile.activeProfile?.avatar"></span>
@@ -165,8 +124,8 @@
             </div>
           </div>
           <div class="flex gap-2">
-            <button @click="view = 'shop'" class="text-2xl hover:scale-110 transition-transform" title="Shop">🏪</button>
-            <button @click="view = 'stats'" class="text-2xl hover:scale-110 transition-transform" title="Stats">📊</button>
+            <button @click="$store.view.current = 'shop'" class="text-2xl hover:scale-110 transition-transform" title="Shop">🏪</button>
+            <button @click="$store.view.current = 'stats'" class="text-2xl hover:scale-110 transition-transform" title="Stats">📊</button>
           </div>
         </div>
 
@@ -191,14 +150,14 @@
                 </div>
               </div>
             </div>
-            <button @click="view = 'pet'" class="text-3xl hover:scale-110 transition-transform">→</button>
+            <button @click="$store.view.current = 'pet'" class="text-3xl hover:scale-110 transition-transform">→</button>
           </div>
         </div>
 
         <div class="space-y-4">
           <!-- Darab Mode (Multiplication Tables) -->
           <button
-            @click="selectedMode = 'sifir'; view = 'settings'"
+            @click="$store.view.selectedMode = 'sifir'; $store.view.current = 'settings'"
             class="w-full p-5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg hover:shadow-xl"
           >
             <div class="flex items-center gap-4">
@@ -212,7 +171,7 @@
 
           <!-- Bahagi Mode (Division Tables) -->
           <button
-            @click="selectedMode = 'bahagi'; view = 'settings'"
+            @click="$store.view.selectedMode = 'bahagi'; $store.view.current = 'settings'"
             class="w-full p-5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600 transition-all shadow-lg hover:shadow-xl"
           >
             <div class="flex items-center gap-4">
@@ -226,7 +185,7 @@
 
           <!-- Tambah Mode (Addition by Difficulty) -->
           <button
-            @click="selectedMode = 'tambah'; view = 'settings'"
+            @click="$store.view.selectedMode = 'tambah'; $store.view.current = 'settings'"
             class="w-full p-5 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 transition-all shadow-lg hover:shadow-xl"
           >
             <div class="flex items-center gap-4">
@@ -240,7 +199,7 @@
 
           <!-- Tolak Mode (Subtraction by Difficulty) -->
           <button
-            @click="selectedMode = 'tolak'; view = 'settings'"
+            @click="$store.view.selectedMode = 'tolak'; $store.view.current = 'settings'"
             class="w-full p-5 rounded-2xl bg-gradient-to-r from-rose-500 to-red-500 text-white hover:from-rose-600 hover:to-red-600 transition-all shadow-lg hover:shadow-xl"
           >
             <div class="flex items-center gap-4">
@@ -254,7 +213,7 @@
 
           <!-- All Operations Mode -->
           <button
-            @click="selectedMode = 'practice'; view = 'settings'"
+            @click="$store.view.selectedMode = 'practice'; $store.view.current = 'settings'"
             class="w-full p-5 rounded-2xl bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-102"
           >
             <div class="flex items-center gap-4">
@@ -268,7 +227,7 @@
 
           <!-- Timed Challenge -->
           <button
-            @click="selectedMode = 'timed'; view = 'settings'"
+            @click="$store.view.selectedMode = 'timed'; $store.view.current = 'settings'"
             class="w-full p-5 rounded-2xl bg-gradient-to-r from-cyan-500 to-cyan-600 text-white hover:from-cyan-600 hover:to-cyan-700 transition-all shadow-lg hover:shadow-xl"
           >
             <div class="flex items-center gap-4">
@@ -282,7 +241,7 @@
 
           <!-- Level Mode -->
           <button
-            @click="selectedMode = 'level'; view = 'settings'"
+            @click="$store.view.selectedMode = 'level'; $store.view.current = 'settings'"
             class="w-full p-5 rounded-2xl bg-gradient-to-r from-pink-500 to-pink-600 text-white hover:from-pink-600 hover:to-pink-700 transition-all shadow-lg hover:shadow-xl"
           >
             <div class="flex items-center gap-4">
@@ -314,29 +273,29 @@
     </div>
 
     <!-- Game Settings -->
-    <div x-show="view === 'settings'" x-cloak class="min-h-screen flex items-center justify-center p-4">
+    <div x-show="$store.view.current === 'settings'" x-cloak class="min-h-screen flex items-center justify-center p-4">
       <div class="card max-w-md w-full">
-        <button @click="view = 'menu'" class="text-2xl mb-4 hover:scale-110 transition-transform">←</button>
+        <button @click="$store.view.current = 'menu'" class="text-2xl mb-4 hover:scale-110 transition-transform">←</button>
 
         <h2 class="text-2xl font-bold text-purple-600 mb-6 text-center">
-          <span x-show="selectedMode === 'practice'">🎯 All Operations</span>
-          <span x-show="selectedMode === 'timed'">⏱️ Timed Challenge</span>
-          <span x-show="selectedMode === 'level'">🏆 Level Mode</span>
-          <span x-show="selectedMode === 'sifir'">✖️ Darab Mode</span>
-          <span x-show="selectedMode === 'bahagi'">➗ Bahagi Mode</span>
-          <span x-show="selectedMode === 'tambah'">➕ Tambah Mode</span>
-          <span x-show="selectedMode === 'tolak'">➖ Tolak Mode</span>
+          <span x-show="$store.view.selectedMode === 'practice'">🎯 All Operations</span>
+          <span x-show="$store.view.selectedMode === 'timed'">⏱️ Timed Challenge</span>
+          <span x-show="$store.view.selectedMode === 'level'">🏆 Level Mode</span>
+          <span x-show="$store.view.selectedMode === 'sifir'">✖️ Darab Mode</span>
+          <span x-show="$store.view.selectedMode === 'bahagi'">➗ Bahagi Mode</span>
+          <span x-show="$store.view.selectedMode === 'tambah'">➕ Tambah Mode</span>
+          <span x-show="$store.view.selectedMode === 'tolak'">➖ Tolak Mode</span>
         </h2>
 
         <!-- Difficulty (for practice, timed, tambah, and tolak modes only) -->
-        <div x-show="selectedMode === 'practice' || selectedMode === 'timed' || selectedMode === 'tambah' || selectedMode === 'tolak'" class="mb-6">
+        <div x-show="$store.view.selectedMode === 'practice' || $store.view.selectedMode === 'timed' || $store.view.selectedMode === 'tambah' || $store.view.selectedMode === 'tolak'" class="mb-6">
           <h3 class="font-bold text-gray-700 mb-3">Difficulty</h3>
           <div class="flex gap-2">
             <template x-for="(config, key) in DIFFICULTY_CONFIG" :key="key">
               <button
-                @click="selectedDifficulty = key"
+                @click="$store.view.selectedDifficulty = key"
                 class="flex-1 py-3 px-2 rounded-xl font-bold transition-all text-sm"
-                :class="selectedDifficulty === key ? 'bg-purple-500 text-white' : 'bg-purple-100 text-purple-600 hover:bg-purple-200'"
+                :class="$store.view.selectedDifficulty === key ? 'bg-purple-500 text-white' : 'bg-purple-100 text-purple-600 hover:bg-purple-200'"
                 x-text="key.charAt(0).toUpperCase() + key.slice(1)"
               ></button>
             </template>
@@ -344,14 +303,14 @@
         </div>
 
         <!-- Operations (for practice and timed modes only) -->
-        <div x-show="selectedMode === 'practice' || selectedMode === 'timed'" class="mb-6">
+        <div x-show="$store.view.selectedMode === 'practice' || $store.view.selectedMode === 'timed'" class="mb-6">
           <h3 class="font-bold text-gray-700 mb-3">Operations</h3>
           <div class="flex gap-2 justify-center">
             <template x-for="(symbol, op) in OPERATION_SYMBOLS" :key="op">
               <button
-                @click="toggleOperation(op)"
+                @click="$store.view.toggleOperation(op)"
                 class="w-14 h-14 rounded-xl text-2xl font-bold transition-all"
-                :class="selectedOperations.includes(op) ? 'bg-purple-500 text-white' : 'bg-purple-100 text-purple-600 hover:bg-purple-200'"
+                :class="$store.view.selectedOperations.includes(op) ? 'bg-purple-500 text-white' : 'bg-purple-100 text-purple-600 hover:bg-purple-200'"
                 x-text="symbol"
               ></button>
             </template>
@@ -359,14 +318,14 @@
         </div>
 
         <!-- Time Limit (timed mode only) -->
-        <div x-show="selectedMode === 'timed'" class="mb-6">
+        <div x-show="$store.view.selectedMode === 'timed'" class="mb-6">
           <h3 class="font-bold text-gray-700 mb-3">Time Limit</h3>
           <div class="flex gap-2">
             <template x-for="time in [60, 90, 120]" :key="time">
               <button
-                @click="selectedTime = time"
+                @click="$store.view.selectedTime = time"
                 class="flex-1 py-3 rounded-xl font-bold transition-all"
-                :class="selectedTime === time ? 'bg-cyan-500 text-white' : 'bg-cyan-100 text-cyan-600 hover:bg-cyan-200'"
+                :class="$store.view.selectedTime === time ? 'bg-cyan-500 text-white' : 'bg-cyan-100 text-cyan-600 hover:bg-cyan-200'"
               >
                 <span x-text="time"></span>s
               </button>
@@ -375,7 +334,7 @@
         </div>
 
         <!-- Level Mode Info -->
-        <div x-show="selectedMode === 'level'" class="mb-6 bg-pink-50 p-4 rounded-xl">
+        <div x-show="$store.view.selectedMode === 'level'" class="mb-6 bg-pink-50 p-4 rounded-xl">
           <p class="text-gray-600">
             Start at Level 1 and work your way up! Get 8 out of 10 correct to advance.
             Difficulty increases as you progress.
@@ -386,7 +345,7 @@
         </div>
 
         <!-- Darab Mode Info -->
-        <div x-show="selectedMode === 'sifir'" class="mb-6 bg-amber-50 p-4 rounded-xl">
+        <div x-show="$store.view.selectedMode === 'sifir'" class="mb-6 bg-amber-50 p-4 rounded-xl">
           <p class="text-gray-600">
             Master multiplication tables from 1 to 12! Start with Darab 1 (1×1 to 1×12),
             then progress to Darab 2, and so on.
@@ -397,7 +356,7 @@
         </div>
 
         <!-- Bahagi Mode Info -->
-        <div x-show="selectedMode === 'bahagi'" class="mb-6 bg-emerald-50 p-4 rounded-xl">
+        <div x-show="$store.view.selectedMode === 'bahagi'" class="mb-6 bg-emerald-50 p-4 rounded-xl">
           <p class="text-gray-600">
             Master division tables from 1 to 12! Start with Bahagi 1 (1÷1 to 12÷1),
             then progress to Bahagi 2, and so on.
@@ -408,7 +367,7 @@
         </div>
 
         <!-- Tambah Mode Info -->
-        <div x-show="selectedMode === 'tambah'" class="mb-6 bg-blue-50 p-4 rounded-xl">
+        <div x-show="$store.view.selectedMode === 'tambah'" class="mb-6 bg-blue-50 p-4 rounded-xl">
           <p class="text-gray-600">
             Master addition through all difficulty levels! Start with Easy (1-10),
             then progress to Medium (1-50), and finally Hard (1-100).
@@ -419,7 +378,7 @@
         </div>
 
         <!-- Tolak Mode Info -->
-        <div x-show="selectedMode === 'tolak'" class="mb-6 bg-rose-50 p-4 rounded-xl">
+        <div x-show="$store.view.selectedMode === 'tolak'" class="mb-6 bg-rose-50 p-4 rounded-xl">
           <p class="text-gray-600">
             Master subtraction through all difficulty levels! Start with Easy (1-10),
             then progress to Medium (1-50), and finally Hard (1-100).
@@ -429,31 +388,31 @@
           </p>
         </div>
 
-        <button @click="startGame()" class="btn w-full text-xl py-4"
+        <button @click="$store.view.startGame()" class="btn w-full text-xl py-4"
           :class="{
-            'btn-primary': selectedMode === 'practice',
-            'btn-secondary': selectedMode === 'timed',
-            'btn-pink': selectedMode === 'level',
-            'bg-amber-500 hover:bg-amber-600': selectedMode === 'sifir',
-            'bg-emerald-500 hover:bg-emerald-600': selectedMode === 'bahagi',
-            'bg-blue-500 hover:bg-blue-600': selectedMode === 'tambah',
-            'bg-rose-500 hover:bg-rose-600': selectedMode === 'tolak',
-            'opacity-50 cursor-not-allowed': (selectedMode === 'practice' || selectedMode === 'timed') && selectedOperations.length === 0
+            'btn-primary': $store.view.selectedMode === 'practice',
+            'btn-secondary': $store.view.selectedMode === 'timed',
+            'btn-pink': $store.view.selectedMode === 'level',
+            'bg-amber-500 hover:bg-amber-600': $store.view.selectedMode === 'sifir',
+            'bg-emerald-500 hover:bg-emerald-600': $store.view.selectedMode === 'bahagi',
+            'bg-blue-500 hover:bg-blue-600': $store.view.selectedMode === 'tambah',
+            'bg-rose-500 hover:bg-rose-600': $store.view.selectedMode === 'tolak',
+            'opacity-50 cursor-not-allowed': ($store.view.selectedMode === 'practice' || $store.view.selectedMode === 'timed') && $store.view.selectedOperations.length === 0
           }"
-          :disabled="(selectedMode === 'practice' || selectedMode === 'timed') && selectedOperations.length === 0"
+          :disabled="($store.view.selectedMode === 'practice' || $store.view.selectedMode === 'timed') && $store.view.selectedOperations.length === 0"
         >
-          <span x-show="(selectedMode === 'practice' || selectedMode === 'timed') && selectedOperations.length === 0">Select an operation</span>
-          <span x-show="selectedMode === 'level' || selectedMode === 'sifir' || selectedMode === 'bahagi' || selectedMode === 'tambah' || selectedMode === 'tolak' || selectedOperations.length > 0">Start! 🚀</span>
+          <span x-show="($store.view.selectedMode === 'practice' || $store.view.selectedMode === 'timed') && $store.view.selectedOperations.length === 0">Select an operation</span>
+          <span x-show="$store.view.selectedMode === 'level' || $store.view.selectedMode === 'sifir' || $store.view.selectedMode === 'bahagi' || $store.view.selectedMode === 'tambah' || $store.view.selectedMode === 'tolak' || $store.view.selectedOperations.length > 0">Start! 🚀</span>
         </button>
       </div>
     </div>
 
     <!-- Game Screen -->
-    <div x-show="view === 'game'" x-cloak class="min-h-screen flex items-center justify-center p-4">
+    <div x-show="$store.view.current === 'game'" x-cloak class="min-h-screen flex items-center justify-center p-4">
       <div class="card max-w-lg w-full text-center">
         <!-- Game Header -->
         <div class="flex items-center justify-between mb-6">
-          <button @click="goHome()" class="text-2xl hover:scale-110 transition-transform">✕</button>
+          <button @click="$store.view.goHome()" class="text-2xl hover:scale-110 transition-transform">✕</button>
 
           <!-- Mode-specific info -->
           <div class="flex items-center gap-4">
@@ -654,7 +613,7 @@
     </div>
 
     <!-- Results Screen -->
-    <div x-show="view === 'game' && !$store.game.isPlaying && $store.game.problemsAttempted > 0" x-cloak
+    <div x-show="$store.view.current === 'game' && !$store.game.isPlaying && $store.game.problemsAttempted > 0" x-cloak
          class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
       <div class="card max-w-md w-full text-center animate-bounce-in">
         <h2 class="text-3xl font-bold text-purple-600 mb-2">
@@ -749,10 +708,10 @@
         </div>
 
         <div class="flex gap-3">
-          <button @click="goHome()" class="btn bg-gray-300 hover:bg-gray-400 flex-1">
+          <button @click="$store.view.goHome()" class="btn bg-gray-300 hover:bg-gray-400 flex-1">
             Menu
           </button>
-          <button @click="startGame()" class="btn btn-primary flex-1">
+          <button @click="$store.view.startGame()" class="btn btn-primary flex-1">
             Play Again
           </button>
         </div>
@@ -760,7 +719,7 @@
     </div>
 
     <!-- Pet Screen -->
-    <div x-show="view === 'pet'" x-cloak class="min-h-screen p-4 py-8"
+    <div x-show="$store.view.current === 'pet'" x-cloak class="min-h-screen p-4 py-8"
          x-data="{
            editingName: false,
            newPetName: ''
@@ -768,7 +727,7 @@
       <div class="max-w-md mx-auto">
         <div class="card mb-4">
           <div class="flex items-center justify-between mb-6">
-            <button @click="view = 'menu'" class="text-2xl hover:scale-110 transition-transform">←</button>
+            <button @click="$store.view.current = 'menu'" class="text-2xl hover:scale-110 transition-transform">←</button>
             <h2 class="text-2xl font-bold text-purple-600">🐣 Your Math Buddy</h2>
             <div></div>
           </div>
@@ -923,11 +882,11 @@
     </div>
 
     <!-- Shop Screen -->
-    <div x-show="view === 'shop'" x-cloak class="min-h-screen p-4 py-8">
+    <div x-show="$store.view.current === 'shop'" x-cloak class="min-h-screen p-4 py-8">
       <div class="max-w-2xl mx-auto">
         <div class="card mb-4">
           <div class="flex items-center justify-between mb-6">
-            <button @click="view = 'menu'" class="text-2xl hover:scale-110 transition-transform">←</button>
+            <button @click="$store.view.current = 'menu'" class="text-2xl hover:scale-110 transition-transform">←</button>
             <h2 class="text-2xl font-bold text-purple-600">🏪 Shop</h2>
             <div></div>
           </div>
@@ -1175,11 +1134,11 @@
     </div>
 
     <!-- Stats Screen -->
-    <div x-show="view === 'stats'" x-cloak class="min-h-screen p-4 py-8">
+    <div x-show="$store.view.current === 'stats'" x-cloak class="min-h-screen p-4 py-8">
       <div class="max-w-md mx-auto">
         <div class="card mb-4">
           <div class="flex items-center justify-between mb-4">
-            <button @click="view = 'menu'" class="text-2xl hover:scale-110 transition-transform">←</button>
+            <button @click="$store.view.current = 'menu'" class="text-2xl hover:scale-110 transition-transform">←</button>
             <h2 class="text-xl font-bold text-purple-600">📊 Your Stats</h2>
             <div></div>
           </div>
