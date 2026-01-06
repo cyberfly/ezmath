@@ -301,6 +301,9 @@ function createGameStore(Alpine) {
         }
       }
 
+      // Save session progress
+      this.saveSessionToProfile()
+
       // Show feedback briefly then next problem
       setTimeout(() => {
         if (this.isPlaying) {
@@ -548,6 +551,9 @@ function createGameStore(Alpine) {
       // Move to next question
       this.sifirCurrentIndex++
 
+      // Save session progress
+      this.saveSessionToProfile()
+
       setTimeout(() => {
         if (this.isPlaying) {
           this.nextSifirProblem()
@@ -640,6 +646,9 @@ function createGameStore(Alpine) {
 
       // Move to next question
       this.bahagiCurrentIndex++
+
+      // Save session progress
+      this.saveSessionToProfile()
 
       setTimeout(() => {
         if (this.isPlaying) {
@@ -746,6 +755,9 @@ function createGameStore(Alpine) {
       Alpine.store('profile').updateStats('add', this.currentTambahDifficulty, isCorrect)
       this.tambahCurrentIndex++
 
+      // Save session progress
+      this.saveSessionToProfile()
+
       setTimeout(() => {
         if (this.isPlaying) {
           this.nextTambahProblem()
@@ -817,6 +829,9 @@ function createGameStore(Alpine) {
       Alpine.store('profile').updateStats('subtract', this.currentTolakDifficulty, isCorrect)
       this.tolakCurrentIndex++
 
+      // Save session progress
+      this.saveSessionToProfile()
+
       setTimeout(() => {
         if (this.isPlaying) {
           this.nextTolakProblem()
@@ -868,7 +883,28 @@ function createGameStore(Alpine) {
         currentTolakDifficulty: this.currentTolakDifficulty,
         currentLevel: this.currentLevel,
         timeRemaining: this.timeRemaining,
-        timeLimit: this.timeLimit
+        timeLimit: this.timeLimit,
+        // Save question arrays and progress for proper resume
+        sifirQuestions: this.sifirQuestions,
+        sifirWrongQuestions: this.sifirWrongQuestions,
+        sifirCurrentIndex: this.sifirCurrentIndex,
+        sifirCompleted: this.sifirCompleted,
+        bahagiQuestions: this.bahagiQuestions,
+        bahagiWrongQuestions: this.bahagiWrongQuestions,
+        bahagiCurrentIndex: this.bahagiCurrentIndex,
+        bahagiCompleted: this.bahagiCompleted,
+        tambahQuestions: this.tambahQuestions,
+        tambahWrongQuestions: this.tambahWrongQuestions,
+        tambahCurrentIndex: this.tambahCurrentIndex,
+        tambahCompleted: this.tambahCompleted,
+        tolakQuestions: this.tolakQuestions,
+        tolakWrongQuestions: this.tolakWrongQuestions,
+        tolakCurrentIndex: this.tolakCurrentIndex,
+        tolakCompleted: this.tolakCompleted,
+        currentProblem: this.currentProblem,
+        // Level mode progress
+        problemsInLevel: this.problemsInLevel,
+        correctInLevel: this.correctInLevel
       }
 
       Alpine.store('profile').saveSession(sessionData)
@@ -897,42 +933,75 @@ function createGameStore(Alpine) {
       this.lastResult = null
       this.showFeedback = false
 
-      // Restore mode-specific state
+      // Restore mode-specific state with saved question arrays
       if (this.mode === 'timed') {
         this.timeRemaining = session.timeRemaining || this.timeLimit
         this.startTimer()
       } else if (this.mode === 'level') {
         this.currentLevel = session.currentLevel || 1
+        this.problemsInLevel = session.problemsInLevel || 0
+        this.correctInLevel = session.correctInLevel || 0
         this.updateDifficultyForLevel()
       } else if (this.mode === 'sifir') {
         this.currentSifir = session.currentSifir || 1
-        this.sifirCompleted = false
-        this.initSifirQuestions()
+        this.sifirCompleted = session.sifirCompleted || false
+        // Restore saved question arrays instead of regenerating
+        this.sifirQuestions = session.sifirQuestions || []
+        this.sifirWrongQuestions = session.sifirWrongQuestions || []
+        this.sifirCurrentIndex = session.sifirCurrentIndex || 0
+        // Only initialize if no saved questions
+        if (this.sifirQuestions.length === 0) {
+          this.initSifirQuestions()
+        }
       } else if (this.mode === 'bahagi') {
         this.currentBahagi = session.currentBahagi || 1
-        this.bahagiCompleted = false
-        this.initBahagiQuestions()
+        this.bahagiCompleted = session.bahagiCompleted || false
+        // Restore saved question arrays
+        this.bahagiQuestions = session.bahagiQuestions || []
+        this.bahagiWrongQuestions = session.bahagiWrongQuestions || []
+        this.bahagiCurrentIndex = session.bahagiCurrentIndex || 0
+        if (this.bahagiQuestions.length === 0) {
+          this.initBahagiQuestions()
+        }
       } else if (this.mode === 'tambah') {
         this.currentTambahDifficulty = session.currentTambahDifficulty || 'easy'
-        this.tambahCompleted = false
-        this.initTambahQuestions()
+        this.tambahCompleted = session.tambahCompleted || false
+        // Restore saved question arrays
+        this.tambahQuestions = session.tambahQuestions || []
+        this.tambahWrongQuestions = session.tambahWrongQuestions || []
+        this.tambahCurrentIndex = session.tambahCurrentIndex || 0
+        if (this.tambahQuestions.length === 0) {
+          this.initTambahQuestions()
+        }
       } else if (this.mode === 'tolak') {
         this.currentTolakDifficulty = session.currentTolakDifficulty || 'easy'
-        this.tolakCompleted = false
-        this.initTolakQuestions()
+        this.tolakCompleted = session.tolakCompleted || false
+        // Restore saved question arrays
+        this.tolakQuestions = session.tolakQuestions || []
+        this.tolakWrongQuestions = session.tolakWrongQuestions || []
+        this.tolakCurrentIndex = session.tolakCurrentIndex || 0
+        if (this.tolakQuestions.length === 0) {
+          this.initTolakQuestions()
+        }
       }
 
-      // Generate next problem
-      if (this.mode === 'sifir') {
-        this.nextSifirProblem()
-      } else if (this.mode === 'bahagi') {
-        this.nextBahagiProblem()
-      } else if (this.mode === 'tambah') {
-        this.nextTambahProblem()
-      } else if (this.mode === 'tolak') {
-        this.nextTolakProblem()
+      // Restore current problem if saved, otherwise generate next
+      if (session.currentProblem) {
+        this.currentProblem = session.currentProblem
+        this.focusInput()
       } else {
-        this.nextProblem()
+        // Generate next problem
+        if (this.mode === 'sifir') {
+          this.nextSifirProblem()
+        } else if (this.mode === 'bahagi') {
+          this.nextBahagiProblem()
+        } else if (this.mode === 'tambah') {
+          this.nextTambahProblem()
+        } else if (this.mode === 'tolak') {
+          this.nextTolakProblem()
+        } else {
+          this.nextProblem()
+        }
       }
 
       return true
