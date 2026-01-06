@@ -80,6 +80,9 @@ function createGameStore(Alpine) {
     // Pet evolution tracking (persisted)
     petEvolved: Alpine.$persist(false).as('ezmath_game_petEvolved'),
     petEvolutionData: Alpine.$persist(null).as('ezmath_game_petEvolutionData'),
+    petDevolved: Alpine.$persist(false).as('ezmath_game_petDevolved'),
+    petDevolutionData: Alpine.$persist(null).as('ezmath_game_petDevolutionData'),
+    petDevolutionWarning: Alpine.$persist(null).as('ezmath_game_petDevolutionWarning'),
 
     // Milestone tracking (persisted)
     milestonesAchieved: Alpine.$persist([]).as('ezmath_game_milestonesAchieved'),
@@ -182,6 +185,17 @@ function createGameStore(Alpine) {
       }
     },
 
+    applyPetStatusUpdate(petUpdate) {
+      if (!petUpdate) return
+
+      this.petDevolutionWarning = petUpdate.warning
+
+      if (petUpdate.devolved) {
+        this.petDevolved = true
+        this.petDevolutionData = petUpdate.devolutionData
+      }
+    },
+
     startGame(mode, settings = {}) {
       // Generate unique game ID
       this.gameId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
@@ -208,6 +222,9 @@ function createGameStore(Alpine) {
       }
       this.petEvolved = false
       this.petEvolutionData = null
+      this.petDevolved = false
+      this.petDevolutionData = null
+      this.petDevolutionWarning = null
       this.milestonesAchieved = []
 
       if (mode === 'timed') {
@@ -284,11 +301,12 @@ function createGameStore(Alpine) {
       }
 
       // Update profile stats
-      Alpine.store('profile').updateStats(
+      const petUpdate = Alpine.store('profile').updateStats(
         this.currentProblem.operation,
         this.currentProblem.difficulty,
         isCorrect
       )
+      this.applyPetStatusUpdate(petUpdate)
 
       // Handle level mode
       if (this.mode === 'level') {
@@ -409,9 +427,6 @@ function createGameStore(Alpine) {
 
         // Award stars to profile
         Alpine.store('profile').addStars(this.starsEarned, 'session')
-
-        // Update pet XP (1 XP per problem attempted)
-        Alpine.store('profile').updatePetXP(this.problemsAttempted)
 
         // Check for pet evolution
         const evolutionResult = Alpine.store('profile').checkPetEvolution()
@@ -546,7 +561,8 @@ function createGameStore(Alpine) {
       }
 
       // Update profile stats (use 'medium' difficulty for sifir tracking)
-      Alpine.store('profile').updateStats('multiply', 'medium', isCorrect)
+      const petUpdate = Alpine.store('profile').updateStats('multiply', 'medium', isCorrect)
+      this.applyPetStatusUpdate(petUpdate)
 
       // Move to next question
       this.sifirCurrentIndex++
@@ -642,7 +658,8 @@ function createGameStore(Alpine) {
       }
 
       // Update profile stats (use 'medium' difficulty for bahagi tracking)
-      Alpine.store('profile').updateStats('divide', 'medium', isCorrect)
+      const petUpdate = Alpine.store('profile').updateStats('divide', 'medium', isCorrect)
+      this.applyPetStatusUpdate(petUpdate)
 
       // Move to next question
       this.bahagiCurrentIndex++
@@ -752,7 +769,8 @@ function createGameStore(Alpine) {
         sounds.wrong()
       }
 
-      Alpine.store('profile').updateStats('add', this.currentTambahDifficulty, isCorrect)
+      const petUpdate = Alpine.store('profile').updateStats('add', this.currentTambahDifficulty, isCorrect)
+      this.applyPetStatusUpdate(petUpdate)
       this.tambahCurrentIndex++
 
       // Save session progress
@@ -826,7 +844,8 @@ function createGameStore(Alpine) {
         sounds.wrong()
       }
 
-      Alpine.store('profile').updateStats('subtract', this.currentTolakDifficulty, isCorrect)
+      const petUpdate = Alpine.store('profile').updateStats('subtract', this.currentTolakDifficulty, isCorrect)
+      this.applyPetStatusUpdate(petUpdate)
       this.tolakCurrentIndex++
 
       // Save session progress

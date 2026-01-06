@@ -1,5 +1,13 @@
 // Profile store with local storage persistence
 
+import {
+  DEVOLUTION_THRESHOLD,
+  PET_STAGES,
+  getPetStage,
+  getPetStageName,
+  getPetEmoji
+} from '../utils/petSystem.js'
+
 const AVATARS = ['🦊', '🐱', '🐶', '🦁', '🐼', '🐨', '🐰', '🦄', '🚀', '⭐', '🌈', '🎮']
 
 function generateId() {
@@ -74,6 +82,7 @@ function createProfileStore(Alpine) {
           name: 'Buddy',
           stage: 0, // 0=egg, 1=baby, 2=kid, 3=teen, 4=adult
           xp: 0,
+          devolutionRisk: 0,
           evolutionPath: 'default',
           lastFed: null,
           accessories: []
@@ -110,7 +119,7 @@ function createProfileStore(Alpine) {
 
     updateStats(operation, difficulty, isCorrect) {
       const profile = this.activeProfile
-      if (!profile) return
+      if (!profile) return null
 
       profile.stats.totalProblems++
       profile.stats.byOperation[operation].attempted++
@@ -127,6 +136,8 @@ function createProfileStore(Alpine) {
       } else {
         profile.stats.currentStreak = 0
       }
+
+      return this.updatePetAfterAnswer(isCorrect)
     },
 
     updateHighScore(mode, score) {
@@ -223,9 +234,17 @@ function createProfileStore(Alpine) {
           name: 'Buddy',
           stage: 0,
           xp: 0,
+          devolutionRisk: 0,
           evolutionPath: 'default',
           lastFed: null,
           accessories: []
+        }
+      } else {
+        if (typeof profile.pet.xp !== 'number') {
+          profile.pet.xp = 0
+        }
+        if (typeof profile.pet.devolutionRisk !== 'number') {
+          profile.pet.devolutionRisk = 0
         }
       }
     },
@@ -252,17 +271,10 @@ function createProfileStore(Alpine) {
 
       this.initializePet()
 
-      // Import pet system utilities (will be available globally)
-      const totalProblems = profile.stats.totalProblems || 0
+      const petXp = profile.pet.xp || 0
       const currentStage = profile.pet.stage
 
-      // Calculate what stage pet should be at
-      let newStage = 0
-      if (totalProblems >= 500) newStage = 4
-      else if (totalProblems >= 300) newStage = 3
-      else if (totalProblems >= 100) newStage = 2
-      else if (totalProblems >= 25) newStage = 1
-      else newStage = 0
+      const newStage = getPetStage(petXp)
 
       if (newStage > currentStage) {
         profile.pet.stage = newStage
@@ -276,6 +288,66 @@ function createProfileStore(Alpine) {
       return {
         evolved: false,
         currentStage: currentStage
+      }
+    },
+
+    updatePetAfterAnswer(isCorrect) {
+      const profile = this.activeProfile
+      if (!profile) return null
+
+      this.initializePet()
+
+      const pet = profile.pet
+      pet.xp = typeof pet.xp === 'number' ? pet.xp : 0
+      pet.devolutionRisk = typeof pet.devolutionRisk === 'number' ? pet.devolutionRisk : 0
+
+      pet.xp += 1
+
+      if (isCorrect) {
+        pet.devolutionRisk = Math.max(0, pet.devolutionRisk - 1)
+      } else {
+        pet.devolutionRisk += 1
+      }
+
+      let devolutionData = null
+      let devolved = false
+
+      if (!isCorrect && pet.devolutionRisk >= DEVOLUTION_THRESHOLD && pet.stage > 0) {
+        const oldStage = pet.stage
+        const newStage = pet.stage - 1
+        pet.stage = newStage
+        pet.devolutionRisk = 0
+
+        const newStageData = PET_STAGES.find(stage => stage.stage === newStage)
+        if (newStageData) {
+          const minXp = newStageData.minProblems
+          const maxXp = newStageData.maxProblems
+          pet.xp = Math.min(Math.max(pet.xp, minXp), maxXp)
+        }
+
+        devolved = true
+        devolutionData = {
+          oldStage,
+          newStage,
+          name: getPetStageName(newStage),
+          emoji: getPetEmoji(newStage)
+        }
+      }
+
+      const warning = !devolved && pet.stage > 0 && pet.devolutionRisk >= DEVOLUTION_THRESHOLD - 1
+        ? {
+            risk: pet.devolutionRisk,
+            threshold: DEVOLUTION_THRESHOLD,
+            mistakesRemaining: Math.max(0, DEVOLUTION_THRESHOLD - pet.devolutionRisk)
+          }
+        : null
+
+      return {
+        devolved,
+        devolutionData,
+        warning,
+        risk: pet.devolutionRisk,
+        threshold: DEVOLUTION_THRESHOLD
       }
     },
 

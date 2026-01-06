@@ -1,6 +1,6 @@
 // Pet system for virtual companion that grows with player progress
 
-// Pet evolution stages based on total problems solved
+// Pet evolution stages based on pet XP
 const PET_STAGES = [
   {
     stage: 0,
@@ -52,10 +52,12 @@ const PET_STAGES = [
   }
 ]
 
-// Get current pet stage based on total problems solved
-function getPetStage(totalProblems) {
+const DEVOLUTION_THRESHOLD = 3
+
+// Get current pet stage based on pet XP
+function getPetStage(petXp) {
   for (let i = PET_STAGES.length - 1; i >= 0; i--) {
-    if (totalProblems >= PET_STAGES[i].minProblems) {
+    if (petXp >= PET_STAGES[i].minProblems) {
       return PET_STAGES[i].stage
     }
   }
@@ -102,36 +104,37 @@ function checkEvolution(currentStage, totalProblems) {
 }
 
 // Calculate progress to next evolution (0-100%)
-function getEvolutionProgress(totalProblems) {
+function getEvolutionProgress(petXp) {
   const currentStageData = PET_STAGES.find(s =>
-    totalProblems >= s.minProblems && totalProblems <= s.maxProblems
+    petXp >= s.minProblems && petXp <= s.maxProblems
   )
 
   if (!currentStageData || currentStageData.stage === PET_STAGES.length - 1) {
     return 100 // Max level reached
   }
 
-  const problemsInStage = totalProblems - currentStageData.minProblems
+  const problemsInStage = petXp - currentStageData.minProblems
   const problemsNeeded = currentStageData.maxProblems - currentStageData.minProblems + 1
 
   return Math.round((problemsInStage / problemsNeeded) * 100)
 }
 
 // Get problems needed for next evolution
-function getProblemsToNextEvolution(totalProblems) {
+function getProblemsToNextEvolution(petXp) {
   const currentStageData = PET_STAGES.find(s =>
-    totalProblems >= s.minProblems && totalProblems <= s.maxProblems
+    petXp >= s.minProblems && petXp <= s.maxProblems
   )
 
   if (!currentStageData || currentStageData.stage === PET_STAGES.length - 1) {
     return 0 // Max level reached
   }
 
-  return currentStageData.maxProblems + 1 - totalProblems
+  return currentStageData.maxProblems + 1 - petXp
 }
 
 export {
   PET_STAGES,
+  DEVOLUTION_THRESHOLD,
   getPetStage,
   getPetEmoji,
   getPetStageName,
