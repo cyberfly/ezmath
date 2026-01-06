@@ -17,8 +17,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="/ezmath/assets/index-B8x-tbC8.js"></script>
-  <link rel="stylesheet" crossorigin href="/ezmath/assets/index-Bq0ecu7a.css">
+  <script type="module" crossorigin src="/ezmath/assets/index-CsdOFRLI.js"></script>
+  <link rel="stylesheet" crossorigin href="/ezmath/assets/index-_zRLTV2j.css">
 </head>
 <body>
   <div id="app" x-data="{
@@ -57,7 +57,12 @@
       $store.game.reset();
       this.view = 'menu';
     }
-  }">
+  }" x-init="
+    // Apply saved theme on load
+    if ($store.profile.activeProfile?.equippedItems?.theme) {
+      Themes.applyTheme($store.profile.activeProfile.equippedItems.theme);
+    }
+  ">
 
     <!-- Profile Selection Screen -->
     <div x-show="view === 'home'" x-cloak class="min-h-screen flex items-center justify-center p-4">
@@ -149,14 +154,46 @@
         <!-- Profile Header -->
         <div class="flex items-center justify-between mb-6">
           <button @click="view = 'home'" class="text-2xl hover:scale-110 transition-transform">←</button>
-          <div class="flex items-center gap-2">
-            <span class="text-3xl" x-text="$store.profile.activeProfile?.avatar"></span>
-            <span class="font-bold text-lg" x-text="$store.profile.activeProfile?.name"></span>
+          <div class="flex flex-col items-center gap-1">
+            <div class="flex items-center gap-2">
+              <span class="text-3xl" x-text="$store.profile.activeProfile?.avatar"></span>
+              <span class="font-bold text-lg" x-text="$store.profile.activeProfile?.name"></span>
+            </div>
+            <div class="flex items-center gap-1 bg-amber-100 px-3 py-1 rounded-full">
+              <span>⭐</span>
+              <span class="font-bold text-amber-600" x-text="$store.profile.activeProfile?.stats.stars || 0"></span>
+            </div>
           </div>
-          <button @click="view = 'stats'" class="text-2xl hover:scale-110 transition-transform">📊</button>
+          <div class="flex gap-2">
+            <button @click="view = 'shop'" class="text-2xl hover:scale-110 transition-transform" title="Shop">🏪</button>
+            <button @click="view = 'stats'" class="text-2xl hover:scale-110 transition-transform" title="Stats">📊</button>
+          </div>
         </div>
 
         <h2 class="text-2xl font-bold text-purple-600 mb-6">Choose Your Game</h2>
+
+        <!-- Pet Display -->
+        <div class="mb-6 bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-2xl border-2 border-purple-200">
+          <div class="flex items-center gap-4">
+            <div class="text-6xl" x-text="PetSystem.getPetEmoji($store.profile.activeProfile?.pet?.stage || 0)"></div>
+            <div class="flex-1">
+              <div class="font-bold text-lg text-purple-700" x-text="($store.profile.activeProfile?.pet?.name || 'Buddy')"></div>
+              <div class="text-sm text-purple-600" x-text="PetSystem.getPetMessage($store.profile.activeProfile?.pet?.stage || 0)"></div>
+              <div class="mt-2">
+                <div class="h-2 bg-purple-200 rounded-full overflow-hidden">
+                  <div
+                    class="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all"
+                    :style="'width: ' + PetSystem.getEvolutionProgress($store.profile.activeProfile?.stats.totalProblems || 0) + '%'"
+                  ></div>
+                </div>
+                <div class="text-xs text-gray-500 mt-1">
+                  <span x-text="PetSystem.getProblemsToNextEvolution($store.profile.activeProfile?.stats.totalProblems || 0)"></span> problems to next evolution
+                </div>
+              </div>
+            </div>
+            <button @click="view = 'pet'" class="text-3xl hover:scale-110 transition-transform">→</button>
+          </div>
+        </div>
 
         <div class="space-y-4">
           <!-- Darab Mode (Multiplication Tables) -->
@@ -457,9 +494,15 @@
             </div>
           </div>
 
-          <div class="flex items-center gap-2 bg-purple-100 px-4 py-2 rounded-full">
-            <span class="text-xl">⭐</span>
-            <span class="font-bold text-lg text-purple-600" x-text="$store.game.score"></span>
+          <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2 bg-amber-100 px-4 py-2 rounded-full">
+              <span class="text-xl">⭐</span>
+              <span class="font-bold text-lg text-amber-600" x-text="$store.game.starsEarned"></span>
+            </div>
+            <div class="flex items-center gap-2 bg-purple-100 px-4 py-2 rounded-full">
+              <span class="text-xl">📊</span>
+              <span class="font-bold text-lg text-purple-600" x-text="$store.game.score"></span>
+            </div>
           </div>
         </div>
 
@@ -576,6 +619,18 @@
           </div>
         </div>
 
+        <!-- Pet Companion -->
+        <div class="my-4">
+          <div class="flex items-center justify-center gap-2">
+            <div
+              class="text-3xl transition-transform"
+              :class="{ 'animate-bounce': $store.game.showFeedback && $store.game.lastResult === 'correct' }"
+              x-text="PetSystem.getPetEmoji($store.profile.activeProfile?.pet?.stage || 0)"
+            ></div>
+            <div class="text-sm text-gray-500" x-text="($store.profile.activeProfile?.pet?.name || 'Buddy') + ' is cheering you on!'"></div>
+          </div>
+        </div>
+
         <!-- Stats Bar -->
         <div class="flex justify-center gap-8 text-center border-t-2 border-purple-100 pt-4">
           <div>
@@ -621,6 +676,57 @@
           <span x-show="$store.game.accuracy < 50">💪</span>
         </div>
 
+        <!-- Milestone Celebrations -->
+        <div x-show="$store.game.milestonesAchieved.length > 0" class="space-y-3 mb-6">
+          <template x-for="milestone in $store.game.milestonesAchieved" :key="milestone.id">
+            <div class="bg-gradient-to-r from-yellow-400 to-orange-400 p-6 rounded-2xl animate-bounce-in">
+              <div class="text-white text-6xl mb-3" x-text="milestone.emoji"></div>
+              <div class="text-white text-2xl font-extrabold mb-1" x-text="milestone.message"></div>
+              <div class="text-yellow-100 text-lg">
+                Bonus: +<span x-text="milestone.reward"></span> ⭐
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <!-- Pet Evolution Celebration -->
+        <div x-show="$store.game.petEvolved" class="bg-gradient-to-r from-pink-400 to-purple-400 p-6 rounded-2xl mb-6 animate-bounce-in">
+          <div class="text-white text-6xl mb-3">
+            <span x-text="PetSystem.getPetEmoji($store.game.petEvolutionData?.newStage || 0)"></span>
+          </div>
+          <div class="text-white text-2xl font-extrabold mb-1">
+            Pet Evolved!
+          </div>
+          <div class="text-pink-100 text-lg">
+            <span x-text="($store.profile.activeProfile?.pet?.name || 'Buddy')"></span> is now a
+            <span x-text="PetSystem.getPetStageName($store.game.petEvolutionData?.newStage || 0)"></span>!
+          </div>
+        </div>
+
+        <!-- Stars Earned -->
+        <div class="bg-gradient-to-r from-amber-400 to-yellow-400 p-6 rounded-2xl mb-6">
+          <div class="text-white text-5xl font-extrabold mb-2">
+            +<span x-text="$store.game.starsEarned"></span> ⭐
+          </div>
+          <div class="text-amber-100 text-sm space-y-1">
+            <div x-show="$store.game.starBreakdown.base > 0">
+              Base: +<span x-text="$store.game.starBreakdown.base"></span>
+            </div>
+            <div x-show="$store.game.starBreakdown.accuracyBonus > 0">
+              Accuracy Bonus: +<span x-text="$store.game.starBreakdown.accuracyBonus"></span>
+            </div>
+            <div x-show="$store.game.starBreakdown.completionBonus > 0">
+              Completion Bonus: +<span x-text="$store.game.starBreakdown.completionBonus"></span>
+            </div>
+            <div x-show="$store.game.starBreakdown.streakBonus > 0">
+              Streak Bonus: +<span x-text="$store.game.starBreakdown.streakBonus"></span>
+            </div>
+          </div>
+          <div class="text-white text-sm mt-3 pt-3 border-t border-amber-300">
+            Total Stars: <span class="font-bold" x-text="$store.profile.activeProfile?.stats.stars || 0"></span>
+          </div>
+        </div>
+
         <div class="grid grid-cols-2 gap-4 mb-6">
           <div class="bg-purple-50 p-4 rounded-xl">
             <div class="text-3xl font-bold text-purple-600" x-text="$store.game.score"></div>
@@ -647,6 +753,421 @@
           <button @click="startGame()" class="btn btn-primary flex-1">
             Play Again
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pet Screen -->
+    <div x-show="view === 'pet'" x-cloak class="min-h-screen p-4 py-8"
+         x-data="{
+           editingName: false,
+           newPetName: ''
+         }">
+      <div class="max-w-md mx-auto">
+        <div class="card mb-4">
+          <div class="flex items-center justify-between mb-6">
+            <button @click="view = 'menu'" class="text-2xl hover:scale-110 transition-transform">←</button>
+            <h2 class="text-2xl font-bold text-purple-600">🐣 Your Math Buddy</h2>
+            <div></div>
+          </div>
+
+          <!-- Pet Display -->
+          <div class="text-center mb-6">
+            <div class="text-9xl mb-4" x-text="PetSystem.getPetEmoji($store.profile.activeProfile?.pet?.stage || 0)"></div>
+
+            <!-- Pet Name (editable) -->
+            <div x-show="!editingName" class="mb-2">
+              <div class="text-2xl font-bold text-purple-700 inline-flex items-center gap-2">
+                <span x-text="$store.profile.activeProfile?.pet?.name || 'Buddy'"></span>
+                <button
+                  @click="editingName = true; newPetName = $store.profile.activeProfile?.pet?.name || 'Buddy'"
+                  class="text-sm text-purple-500 hover:text-purple-700"
+                >
+                  ✏️
+                </button>
+              </div>
+            </div>
+
+            <!-- Edit Name Input -->
+            <div x-show="editingName" class="mb-2">
+              <input
+                type="text"
+                x-model="newPetName"
+                @keyup.enter="$store.profile.updatePetName(newPetName); editingName = false"
+                @keyup.escape="editingName = false"
+                class="text-2xl font-bold text-center px-4 py-2 rounded-xl border-2 border-purple-300 focus:border-purple-500 focus:outline-none"
+                maxlength="20"
+                x-effect="if (editingName) $nextTick(() => $el.focus())"
+              />
+              <div class="flex gap-2 justify-center mt-2">
+                <button
+                  @click="$store.profile.updatePetName(newPetName); editingName = false"
+                  class="btn btn-success text-sm px-4 py-1"
+                >
+                  ✓ Save
+                </button>
+                <button
+                  @click="editingName = false"
+                  class="btn bg-gray-300 hover:bg-gray-400 text-sm px-4 py-1"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+
+            <div class="text-lg text-purple-600 mb-4">
+              Stage <span x-text="($store.profile.activeProfile?.pet?.stage || 0) + 1"></span>/5:
+              <span x-text="PetSystem.getPetStageName($store.profile.activeProfile?.pet?.stage || 0)"></span>
+            </div>
+
+            <div class="text-sm text-gray-600" x-text="PetSystem.getPetMessage($store.profile.activeProfile?.pet?.stage || 0)"></div>
+          </div>
+
+          <!-- Evolution Progress -->
+          <div class="mb-6 px-4">
+            <div class="flex items-center justify-between text-sm text-gray-600 mb-2">
+              <span>Evolution Progress</span>
+              <span x-text="PetSystem.getEvolutionProgress($store.profile.activeProfile?.stats.totalProblems || 0) + '%'"></span>
+            </div>
+            <div class="h-4 bg-purple-200 rounded-full overflow-hidden">
+              <div
+                class="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all"
+                :style="'width: ' + PetSystem.getEvolutionProgress($store.profile.activeProfile?.stats.totalProblems || 0) + '%'"
+              ></div>
+            </div>
+            <div class="text-xs text-gray-500 mt-2 text-center">
+              <span x-text="PetSystem.getProblemsToNextEvolution($store.profile.activeProfile?.stats.totalProblems || 0)"></span> more problems to evolve!
+            </div>
+          </div>
+
+          <!-- Pet Stats -->
+          <div class="grid grid-cols-2 gap-3 mb-6">
+            <div class="bg-purple-50 p-3 rounded-xl text-center">
+              <div class="text-2xl font-bold text-purple-600" x-text="$store.profile.activeProfile?.pet?.xp || 0"></div>
+              <div class="text-xs text-gray-500">Total XP</div>
+            </div>
+            <div class="bg-pink-50 p-3 rounded-xl text-center">
+              <div class="text-2xl font-bold text-pink-600" x-text="$store.profile.activeProfile?.stats.totalProblems || 0"></div>
+              <div class="text-xs text-gray-500">Problems Solved</div>
+            </div>
+          </div>
+
+          <!-- Interaction Buttons -->
+          <div class="space-y-3">
+            <button
+              @click="if ($store.profile.feedPet()) { alert('🍕 ' + ($store.profile.activeProfile?.pet?.name || 'Buddy') + ' enjoyed the treat!') }"
+              :disabled="($store.profile.activeProfile?.stats.stars || 0) < 10"
+              class="w-full btn transition-all"
+              :class="($store.profile.activeProfile?.stats.stars || 0) >= 10 ? 'bg-amber-500 hover:bg-amber-600 text-white' : 'bg-gray-300 text-gray-500 cursor-not-allowed'"
+            >
+              <span class="text-xl">🍕</span>
+              Feed Pet (10 ⭐)
+            </button>
+
+            <button
+              @click="if ($store.profile.playWithPet()) { alert('🎮 You played with ' + ($store.profile.activeProfile?.pet?.name || 'Buddy') + '!') }"
+              :disabled="($store.profile.activeProfile?.stats.stars || 0) < 5"
+              class="w-full btn transition-all"
+              :class="($store.profile.activeProfile?.stats.stars || 0) >= 5 ? 'bg-purple-500 hover:bg-purple-600 text-white' : 'bg-gray-300 text-gray-500 cursor-not-allowed'"
+            >
+              <span class="text-xl">🎮</span>
+              Play with Pet (5 ⭐)
+            </button>
+          </div>
+
+          <!-- Evolution Guide -->
+          <div class="mt-6 pt-6 border-t-2 border-purple-100">
+            <div class="text-sm font-bold text-gray-700 mb-3 text-center">Evolution Stages</div>
+            <div class="space-y-2 text-sm">
+              <div class="flex items-center gap-3 p-2 rounded-lg" :class="($store.profile.activeProfile?.pet?.stage || 0) === 0 ? 'bg-purple-100' : ''">
+                <span class="text-2xl">🥚</span>
+                <div>
+                  <div class="font-bold">Egg (0-24 problems)</div>
+                  <div class="text-xs text-gray-500">Your journey begins!</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-3 p-2 rounded-lg" :class="($store.profile.activeProfile?.pet?.stage || 0) === 1 ? 'bg-purple-100' : ''">
+                <span class="text-2xl">🐣</span>
+                <div>
+                  <div class="font-bold">Baby (25-99 problems)</div>
+                  <div class="text-xs text-gray-500">First steps!</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-3 p-2 rounded-lg" :class="($store.profile.activeProfile?.pet?.stage || 0) === 2 ? 'bg-purple-100' : ''">
+                <span class="text-2xl">🐤</span>
+                <div>
+                  <div class="font-bold">Kid (100-299 problems)</div>
+                  <div class="text-xs text-gray-500">Learning fast!</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-3 p-2 rounded-lg" :class="($store.profile.activeProfile?.pet?.stage || 0) === 3 ? 'bg-purple-100' : ''">
+                <span class="text-2xl">🐦</span>
+                <div>
+                  <div class="font-bold">Teen (300-499 problems)</div>
+                  <div class="text-xs text-gray-500">Getting stronger!</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-3 p-2 rounded-lg" :class="($store.profile.activeProfile?.pet?.stage || 0) === 4 ? 'bg-purple-100' : ''">
+                <span class="text-2xl">🦅</span>
+                <div>
+                  <div class="font-bold">Adult (500+ problems)</div>
+                  <div class="text-xs text-gray-500">Fully evolved!</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Shop Screen -->
+    <div x-show="view === 'shop'" x-cloak class="min-h-screen p-4 py-8">
+      <div class="max-w-2xl mx-auto">
+        <div class="card mb-4">
+          <div class="flex items-center justify-between mb-6">
+            <button @click="view = 'menu'" class="text-2xl hover:scale-110 transition-transform">←</button>
+            <h2 class="text-2xl font-bold text-purple-600">🏪 Shop</h2>
+            <div></div>
+          </div>
+
+          <!-- Star Balance -->
+          <div class="bg-gradient-to-r from-amber-400 to-yellow-400 p-6 rounded-2xl mb-6 text-center">
+            <div class="text-white text-sm mb-1">Your Stars</div>
+            <div class="text-white text-5xl font-extrabold">
+              <span x-text="$store.profile.activeProfile?.stats.stars || 0"></span> ⭐
+            </div>
+          </div>
+
+          <!-- Shop Tabs -->
+          <div class="mb-6">
+            <div class="flex gap-2 border-b-2 border-purple-100 overflow-x-auto">
+              <button
+                @click="$store.shop.activeTab = 'avatars'"
+                class="px-4 py-2 font-bold transition-colors whitespace-nowrap"
+                :class="$store.shop.activeTab === 'avatars' ? 'text-purple-600 border-b-2 border-purple-600 -mb-0.5' : 'text-gray-400 hover:text-gray-600'"
+              >
+                Avatars
+              </button>
+              <button
+                @click="$store.shop.activeTab = 'themes'"
+                class="px-4 py-2 font-bold transition-colors whitespace-nowrap"
+                :class="$store.shop.activeTab === 'themes' ? 'text-purple-600 border-b-2 border-purple-600 -mb-0.5' : 'text-gray-400 hover:text-gray-600'"
+              >
+                Themes
+              </button>
+              <button
+                @click="$store.shop.activeTab = 'soundPacks'"
+                class="px-4 py-2 font-bold transition-colors whitespace-nowrap"
+                :class="$store.shop.activeTab === 'soundPacks' ? 'text-purple-600 border-b-2 border-purple-600 -mb-0.5' : 'text-gray-400 hover:text-gray-600'"
+              >
+                Sounds
+              </button>
+            </div>
+          </div>
+
+          <!-- Avatar Grid -->
+          <div x-show="$store.shop.activeTab === 'avatars'">
+            <div class="grid grid-cols-3 sm:grid-cols-4 gap-4">
+              <template x-for="item in $store.shop.avatarItems" :key="item.id">
+                <div class="relative">
+                  <!-- Avatar Card -->
+                  <div
+                    class="bg-purple-50 rounded-2xl p-4 text-center border-2 transition-all"
+                    :class="{
+                      'border-purple-400 bg-purple-100': $store.shop.isEquipped('avatars', item.id),
+                      'border-purple-200': !$store.shop.isEquipped('avatars', item.id),
+                      'opacity-50': !$store.shop.isUnlocked('avatars', item.id) && !$store.shop.canAfford(item.price)
+                    }"
+                  >
+                    <!-- Avatar Emoji -->
+                    <div class="text-5xl mb-2" x-text="item.id"></div>
+
+                    <!-- Avatar Name -->
+                    <div class="text-xs font-bold text-gray-700 mb-2" x-text="item.name"></div>
+
+                    <!-- Price or Status -->
+                    <div class="text-sm">
+                      <!-- Equipped -->
+                      <template x-if="$store.shop.isEquipped('avatars', item.id)">
+                        <div class="text-purple-600 font-bold text-xs">✓ Equipped</div>
+                      </template>
+
+                      <!-- Unlocked but not equipped -->
+                      <template x-if="$store.shop.isUnlocked('avatars', item.id) && !$store.shop.isEquipped('avatars', item.id)">
+                        <button
+                          @click="$store.shop.equipItem('avatars', item.id)"
+                          class="w-full bg-purple-500 hover:bg-purple-600 text-white text-xs py-1 px-2 rounded-lg font-bold transition-colors"
+                        >
+                          Equip
+                        </button>
+                      </template>
+
+                      <!-- Not unlocked -->
+                      <template x-if="!$store.shop.isUnlocked('avatars', item.id)">
+                        <div>
+                          <!-- Can afford -->
+                          <template x-if="$store.shop.canAfford(item.price)">
+                            <button
+                              @click="$store.shop.purchaseItem('avatars', item.id, item.price)"
+                              class="w-full bg-amber-500 hover:bg-amber-600 text-white text-xs py-1 px-2 rounded-lg font-bold transition-colors"
+                            >
+                              <span x-text="item.price"></span> ⭐
+                            </button>
+                          </template>
+
+                          <!-- Cannot afford -->
+                          <template x-if="!$store.shop.canAfford(item.price)">
+                            <div class="text-gray-400 text-xs font-bold">
+                              🔒 <span x-text="item.price"></span> ⭐
+                            </div>
+                          </template>
+                        </div>
+                      </template>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+
+            <!-- Tier Legend -->
+            <div class="mt-6 pt-6 border-t-2 border-purple-100 text-center text-sm text-gray-500">
+              <div class="mb-2 font-bold">Price Tiers:</div>
+              <div class="flex flex-wrap justify-center gap-4">
+                <span>Tier 1: 50 ⭐</span>
+                <span>Tier 2: 100 ⭐</span>
+                <span>Tier 3: 200 ⭐</span>
+                <span class="text-amber-600 font-bold">Tier 4: 500 ⭐</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Themes Grid -->
+          <div x-show="$store.shop.activeTab === 'themes'">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <template x-for="item in $store.shop.themeItems" :key="item.id">
+                <div
+                  class="bg-purple-50 rounded-2xl p-6 border-2 transition-all"
+                  :class="{
+                    'border-purple-400 bg-purple-100': $store.shop.isEquipped('themes', item.id),
+                    'border-purple-200': !$store.shop.isEquipped('themes', item.id)
+                  }"
+                >
+                  <!-- Theme Preview -->
+                  <div class="mb-4">
+                    <div
+                      class="h-20 rounded-xl bg-gradient-to-r"
+                      :class="'bg-gradient-to-r ' + item.gradient"
+                    ></div>
+                  </div>
+
+                  <!-- Theme Name -->
+                  <div class="text-lg font-bold text-gray-700 mb-2" x-text="item.name"></div>
+
+                  <!-- Price or Status -->
+                  <div>
+                    <!-- Equipped -->
+                    <template x-if="$store.shop.isEquipped('themes', item.id)">
+                      <div class="text-purple-600 font-bold text-sm">✓ Equipped</div>
+                    </template>
+
+                    <!-- Unlocked but not equipped -->
+                    <template x-if="$store.shop.isUnlocked('themes', item.id) && !$store.shop.isEquipped('themes', item.id)">
+                      <button
+                        @click="$store.shop.equipItem('themes', item.id); Themes.applyTheme(item.id)"
+                        class="w-full bg-purple-500 hover:bg-purple-600 text-white text-sm py-2 px-4 rounded-lg font-bold transition-colors"
+                      >
+                        Equip
+                      </button>
+                    </template>
+
+                    <!-- Not unlocked -->
+                    <template x-if="!$store.shop.isUnlocked('themes', item.id)">
+                      <div>
+                        <!-- Can afford -->
+                        <template x-if="$store.shop.canAfford(item.price)">
+                          <button
+                            @click="$store.shop.purchaseItem('themes', item.id, item.price)"
+                            class="w-full bg-amber-500 hover:bg-amber-600 text-white text-sm py-2 px-4 rounded-lg font-bold transition-colors"
+                          >
+                            <span x-text="item.price"></span> ⭐
+                          </button>
+                        </template>
+
+                        <!-- Cannot afford -->
+                        <template x-if="!$store.shop.canAfford(item.price)">
+                          <div class="text-gray-400 text-sm font-bold text-center">
+                            🔒 <span x-text="item.price"></span> ⭐
+                          </div>
+                        </template>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+
+          <!-- Sound Packs Grid -->
+          <div x-show="$store.shop.activeTab === 'soundPacks'">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <template x-for="item in $store.shop.soundPackItems" :key="item.id">
+                <div
+                  class="bg-purple-50 rounded-2xl p-6 border-2 transition-all"
+                  :class="{
+                    'border-purple-400 bg-purple-100': $store.shop.isEquipped('soundPacks', item.id),
+                    'border-purple-200': !$store.shop.isEquipped('soundPacks', item.id)
+                  }"
+                >
+                  <!-- Sound Icon -->
+                  <div class="text-6xl mb-4 text-center">🔊</div>
+
+                  <!-- Sound Pack Name & Description -->
+                  <div class="text-lg font-bold text-gray-700 mb-1" x-text="item.name"></div>
+                  <div class="text-sm text-gray-500 mb-4" x-text="item.description"></div>
+
+                  <!-- Price or Status -->
+                  <div>
+                    <!-- Equipped -->
+                    <template x-if="$store.shop.isEquipped('soundPacks', item.id)">
+                      <div class="text-purple-600 font-bold text-sm">✓ Equipped</div>
+                    </template>
+
+                    <!-- Unlocked but not equipped -->
+                    <template x-if="$store.shop.isUnlocked('soundPacks', item.id) && !$store.shop.isEquipped('soundPacks', item.id)">
+                      <button
+                        @click="$store.shop.equipItem('soundPacks', item.id)"
+                        class="w-full bg-purple-500 hover:bg-purple-600 text-white text-sm py-2 px-4 rounded-lg font-bold transition-colors"
+                      >
+                        Equip
+                      </button>
+                    </template>
+
+                    <!-- Not unlocked -->
+                    <template x-if="!$store.shop.isUnlocked('soundPacks', item.id)">
+                      <div>
+                        <!-- Can afford -->
+                        <template x-if="$store.shop.canAfford(item.price)">
+                          <button
+                            @click="$store.shop.purchaseItem('soundPacks', item.id, item.price)"
+                            class="w-full bg-amber-500 hover:bg-amber-600 text-white text-sm py-2 px-4 rounded-lg font-bold transition-colors"
+                          >
+                            <span x-text="item.price"></span> ⭐
+                          </button>
+                        </template>
+
+                        <!-- Cannot afford -->
+                        <template x-if="!$store.shop.canAfford(item.price)">
+                          <div class="text-gray-400 text-sm font-bold text-center">
+                            🔒 <span x-text="item.price"></span> ⭐
+                          </div>
+                        </template>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
         </div>
       </div>
     </div>
