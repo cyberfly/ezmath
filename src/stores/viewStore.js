@@ -49,7 +49,7 @@ function createViewStore(Alpine) {
     goHome() {
       const game = Alpine.store('game')
       if (game?.isPlaying) {
-        game.endGame()
+        // game.pauseGame()
       }
       this.current = 'menu'
     }
