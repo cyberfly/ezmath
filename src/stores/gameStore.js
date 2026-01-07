@@ -319,15 +319,13 @@ function createGameStore(Alpine) {
         }
       }
 
-      // Clear current problem before saving so resume will fetch the next problem
-      this.currentProblem = null
-
-      // Save session progress
+      // Save session progress (clear problem so resume fetches next)
       this.saveSessionToProfile()
 
       // Show feedback briefly then next problem
       setTimeout(() => {
         if (this.isPlaying) {
+          this.currentProblem = null
           this.nextProblem()
         }
       }, isCorrect ? 500 : 1000)
@@ -570,14 +568,12 @@ function createGameStore(Alpine) {
       // Move to next question
       this.sifirCurrentIndex++
 
-      // Clear current problem before saving so resume will fetch the next problem
-      this.currentProblem = null
-
       // Save session progress
       this.saveSessionToProfile()
 
       setTimeout(() => {
         if (this.isPlaying) {
+          this.currentProblem = null
           this.nextSifirProblem()
         }
       }, isCorrect ? 500 : 1000)
@@ -670,14 +666,12 @@ function createGameStore(Alpine) {
       // Move to next question
       this.bahagiCurrentIndex++
 
-      // Clear current problem before saving so resume will fetch the next problem
-      this.currentProblem = null
-
       // Save session progress
       this.saveSessionToProfile()
 
       setTimeout(() => {
         if (this.isPlaying) {
+          this.currentProblem = null
           this.nextBahagiProblem()
         }
       }, isCorrect ? 500 : 1000)
@@ -782,14 +776,12 @@ function createGameStore(Alpine) {
       this.applyPetStatusUpdate(petUpdate)
       this.tambahCurrentIndex++
 
-      // Clear current problem before saving so resume will fetch the next problem
-      this.currentProblem = null
-
       // Save session progress
       this.saveSessionToProfile()
 
       setTimeout(() => {
         if (this.isPlaying) {
+          this.currentProblem = null
           this.nextTambahProblem()
         }
       }, isCorrect ? 500 : 1000)
@@ -860,14 +852,12 @@ function createGameStore(Alpine) {
       this.applyPetStatusUpdate(petUpdate)
       this.tolakCurrentIndex++
 
-      // Clear current problem before saving so resume will fetch the next problem
-      this.currentProblem = null
-
       // Save session progress
       this.saveSessionToProfile()
 
       setTimeout(() => {
         if (this.isPlaying) {
+          this.currentProblem = null
           this.nextTolakProblem()
         }
       }, isCorrect ? 500 : 1000)
