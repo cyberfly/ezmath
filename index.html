@@ -18,8 +18,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="/ezmath/assets/index-BJVOy9aM.js"></script>
-  <link rel="stylesheet" crossorigin href="/ezmath/assets/index-BD9H39hF.css">
+  <script type="module" crossorigin src="/ezmath/assets/index-CFKn4wP5.js"></script>
+  <link rel="stylesheet" crossorigin href="/ezmath/assets/index-9kymxDSb.css">
 </head>
 <body>
   <div id="app" x-data="{}" x-init="$store.profile.activeProfile?.equippedItems?.theme && Themes.applyTheme($store.profile.activeProfile.equippedItems.theme)">
@@ -775,7 +775,7 @@
     <!-- Results Screen -->
     <div x-show="$store.view.current === 'game' && !$store.game.isPlaying && $store.game.problemsAttempted > 0" x-cloak
          class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div class="card max-w-md w-full text-center animate-bounce-in">
+      <div class="card max-w-md w-full text-center animate-bounce-in max-h-[calc(100vh-2rem)] overflow-y-auto">
         <h2 class="text-3xl font-bold text-purple-600 mb-2">
           <span x-show="$store.game.mode === 'timed'">⏱️ Time's Up!</span>
           <span x-show="$store.game.mode === 'level' && $store.game.correctInLevel >= $store.game.levelPassThreshold">🎉 Level Complete!</span>
