@@ -721,21 +721,23 @@
 
         <!-- Pet Companion -->
         <div class="my-4">
-          <div class="flex items-center justify-center gap-2">
-            <!-- Clickable Pet for Hints -->
-            <button
-              @click="$store.game.requestHint()"
-              :disabled="$store.game.hintUsed || $store.game.showFeedback || !$store.game.currentProblem"
-              class="text-3xl transition-transform cursor-pointer hover:scale-110 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+          <!-- Clickable Pet Section for Hints -->
+          <button
+            @click="$store.game.requestHint()"
+            :disabled="$store.game.hintUsed || $store.game.showFeedback || !$store.game.currentProblem"
+            class="flex items-center justify-center gap-2 mx-auto cursor-pointer focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+            :title="$store.game.hintUsed ? 'Hint already used' : 'Click for a hint! (Stars -50%)'"
+          >
+            <span
+              class="text-3xl transition-transform hover:scale-110"
               :class="{
                 'animate-bounce': $store.game.showFeedback && $store.game.lastResult === 'correct',
                 'animate-hurt': $store.game.showFeedback && $store.game.lastResult === 'incorrect',
                 'animate-pulse': !$store.game.hintUsed && !$store.game.showFeedback && $store.game.currentProblem
               }"
-              :title="$store.game.hintUsed ? 'Hint already used' : 'Click for a hint! (Stars -50%)'"
               x-text="PetSystem.getPetEmoji($store.profile.activeProfile?.pet?.stage || 0)"
-            ></button>
-            <div class="text-sm flex flex-col">
+            ></span>
+            <div class="text-sm flex flex-col text-left">
               <span
                 :class="$store.game.showFeedback && $store.game.lastResult === 'incorrect' ? 'text-red-500' : 'text-gray-500'"
                 x-text="$store.game.showFeedback && $store.game.lastResult === 'incorrect'
@@ -752,7 +754,7 @@
                 Hint used (Stars -50%)
               </span>
             </div>
-          </div>
+          </button>
           <div x-show="$store.game.petDevolved" class="text-xs text-red-500 mt-1 text-center">
             😿 <span x-text="$store.profile.activeProfile?.pet?.name || 'Nora'"></span> devolved to
             <span x-text="PetSystem.getPetStageName($store.game.petDevolutionData?.newStage || 0)"></span>.
