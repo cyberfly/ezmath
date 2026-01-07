@@ -70,6 +70,7 @@ function createGameStore(Alpine) {
 
     // Currency tracking (persisted)
     starsEarned: Alpine.$persist(0).as('ezmath_game_starsEarned'),
+    starsAwarded: Alpine.$persist(0).as('ezmath_game_starsAwarded'),
     starBreakdown: Alpine.$persist({
       base: 0,
       streakBonus: 0,
@@ -196,6 +197,22 @@ function createGameStore(Alpine) {
       }
     },
 
+    awardProgressStars() {
+      const unawardedStars = this.starsEarned - this.starsAwarded
+      if (unawardedStars <= 0) return
+
+      Alpine.store('profile').addStars(unawardedStars, 'progress')
+      this.starsAwarded += unawardedStars
+    },
+
+    checkProgressEvolution() {
+      const evolutionResult = Alpine.store('profile').checkPetEvolution()
+      if (evolutionResult && evolutionResult.evolved) {
+        this.petEvolved = true
+        this.petEvolutionData = evolutionResult
+      }
+    },
+
     startGame(mode, settings = {}) {
       // Generate unique game ID
       this.gameId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
@@ -214,6 +231,7 @@ function createGameStore(Alpine) {
       this.lastResult = null
       this.showFeedback = false
       this.starsEarned = 0
+      this.starsAwarded = 0
       this.starBreakdown = {
         base: 0,
         streakBonus: 0,
@@ -426,8 +444,12 @@ function createGameStore(Alpine) {
                            this.starBreakdown.completionBonus +
                            this.starBreakdown.streakBonus
 
-        // Award stars to profile
-        Alpine.store('profile').addStars(this.starsEarned, 'session')
+        // Award remaining stars to profile (avoid double-awarding)
+        const unawardedStars = this.starsEarned - this.starsAwarded
+        if (unawardedStars > 0) {
+          Alpine.store('profile').addStars(unawardedStars, 'session')
+          this.starsAwarded += unawardedStars
+        }
 
         // Check for pet evolution
         const evolutionResult = Alpine.store('profile').checkPetEvolution()
@@ -589,6 +611,8 @@ function createGameStore(Alpine) {
         // Move to next sifir
         sounds.levelUp()
         this.currentSifir++
+        this.awardProgressStars()
+        this.checkProgressEvolution()
         this.initSifirQuestions()
         this.nextSifirProblem()
       }
@@ -687,6 +711,8 @@ function createGameStore(Alpine) {
         // Move to next bahagi
         sounds.levelUp()
         this.currentBahagi++
+        this.awardProgressStars()
+        this.checkProgressEvolution()
         this.initBahagiQuestions()
         this.nextBahagiProblem()
       }
@@ -800,6 +826,8 @@ function createGameStore(Alpine) {
         // Move to next difficulty
         sounds.levelUp()
         this.currentTambahDifficulty = difficulties[currentIndex + 1]
+        this.awardProgressStars()
+        this.checkProgressEvolution()
         this.initTambahQuestions()
         this.nextTambahProblem()
       }
@@ -876,6 +904,8 @@ function createGameStore(Alpine) {
         // Move to next difficulty
         sounds.levelUp()
         this.currentTolakDifficulty = difficulties[currentIndex + 1]
+        this.awardProgressStars()
+        this.checkProgressEvolution()
         this.initTolakQuestions()
         this.nextTolakProblem()
       }
