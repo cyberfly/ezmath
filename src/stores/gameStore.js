@@ -843,6 +843,16 @@ function createGameStore(Alpine) {
         this.correctAnswers++
         const difficultyPoints = { easy: 10, medium: 20, hard: 30 }
         this.score += difficultyPoints[this.currentTambahDifficulty]
+
+        // Calculate stars (5 base × difficulty multiplier, with hint penalty)
+        const difficultyMultipliers = { easy: 1, medium: 1.5, hard: 2 }
+        let starsForProblem = Math.round(5 * difficultyMultipliers[this.currentTambahDifficulty])
+        if (this.hintUsed) {
+          starsForProblem = Math.round(starsForProblem * 0.5)
+        }
+        this.starsEarned += starsForProblem
+        this.starBreakdown.base += starsForProblem
+
         sounds.correct()
       } else {
         this.tambahWrongQuestions.push(this.currentProblem)
@@ -922,6 +932,16 @@ function createGameStore(Alpine) {
         this.correctAnswers++
         const difficultyPoints = { easy: 10, medium: 20, hard: 30 }
         this.score += difficultyPoints[this.currentTolakDifficulty]
+
+        // Calculate stars (5 base × difficulty multiplier, with hint penalty)
+        const difficultyMultipliers = { easy: 1, medium: 1.5, hard: 2 }
+        let starsForProblem = Math.round(5 * difficultyMultipliers[this.currentTolakDifficulty])
+        if (this.hintUsed) {
+          starsForProblem = Math.round(starsForProblem * 0.5)
+        }
+        this.starsEarned += starsForProblem
+        this.starBreakdown.base += starsForProblem
+
         sounds.correct()
       } else {
         this.tolakWrongQuestions.push(this.currentProblem)
