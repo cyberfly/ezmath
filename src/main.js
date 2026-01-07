@@ -10,6 +10,7 @@ import { DIFFICULTY_CONFIG, OPERATION_SYMBOLS } from './utils/mathProblems.js'
 import * as PetSystem from './utils/petSystem.js'
 import * as Themes from './utils/themes.js'
 import * as SoundPacks from './utils/soundPacks.js'
+import * as HintGenerator from './utils/hintGenerator.js'
 
 // Register persist plugin
 Alpine.plugin(persist)
@@ -27,6 +28,7 @@ window.OPERATION_SYMBOLS = OPERATION_SYMBOLS
 window.PetSystem = PetSystem
 window.Themes = Themes
 window.SoundPacks = SoundPacks
+window.HintGenerator = HintGenerator
 
 // Start Alpine
 Alpine.start()

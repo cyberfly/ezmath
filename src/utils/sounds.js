@@ -122,6 +122,14 @@ const sounds = {
       { freq: 392.00, duration: 0.1 },  // G4
       { freq: 523.25, duration: 0.15 }, // C5
     ], 0.1)
+  },
+
+  // Gentle chime for hint request (friendly, encouraging)
+  hint() {
+    playNotes([
+      { freq: 523.25, duration: 0.1, volume: 0.2 },  // C5
+      { freq: 659.25, duration: 0.15, volume: 0.25 }, // E5
+    ], 0.08)
   }
 }
 

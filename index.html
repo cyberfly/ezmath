@@ -722,28 +722,183 @@
         <!-- Pet Companion -->
         <div class="my-4">
           <div class="flex items-center justify-center gap-2">
-            <div
-              class="text-3xl transition-transform"
+            <!-- Clickable Pet for Hints -->
+            <button
+              @click="$store.game.requestHint()"
+              :disabled="$store.game.hintUsed || $store.game.showFeedback || !$store.game.currentProblem"
+              class="text-3xl transition-transform cursor-pointer hover:scale-110 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
               :class="{
                 'animate-bounce': $store.game.showFeedback && $store.game.lastResult === 'correct',
-                'animate-hurt': $store.game.showFeedback && $store.game.lastResult === 'incorrect'
+                'animate-hurt': $store.game.showFeedback && $store.game.lastResult === 'incorrect',
+                'animate-pulse': !$store.game.hintUsed && !$store.game.showFeedback && $store.game.currentProblem
               }"
+              :title="$store.game.hintUsed ? 'Hint already used' : 'Click for a hint! (Stars -50%)'"
               x-text="PetSystem.getPetEmoji($store.profile.activeProfile?.pet?.stage || 0)"
-            ></div>
-            <div
-              class="text-sm"
-              :class="$store.game.showFeedback && $store.game.lastResult === 'incorrect' ? 'text-red-500' : 'text-gray-500'"
-              x-text="$store.game.showFeedback && $store.game.lastResult === 'incorrect'
-                ? ($store.profile.activeProfile?.pet?.name || 'Nora') + ' feels sad...'
-                : ($store.profile.activeProfile?.pet?.name || 'Nora') + ' is cheering you on!'"
-            ></div>
+            ></button>
+            <div class="text-sm flex flex-col">
+              <span
+                :class="$store.game.showFeedback && $store.game.lastResult === 'incorrect' ? 'text-red-500' : 'text-gray-500'"
+                x-text="$store.game.showFeedback && $store.game.lastResult === 'incorrect'
+                  ? ($store.profile.activeProfile?.pet?.name || 'Nora') + ' feels sad...'
+                  : ($store.profile.activeProfile?.pet?.name || 'Nora') + ' is cheering you on!'"
+              ></span>
+              <!-- Hint usage indicator -->
+              <span x-show="!$store.game.hintUsed && !$store.game.showFeedback && $store.game.currentProblem"
+                    class="text-xs text-purple-400">
+                Tap me for a hint!
+              </span>
+              <span x-show="$store.game.hintUsed && !$store.game.showFeedback"
+                    class="text-xs text-amber-500">
+                Hint used (Stars -50%)
+              </span>
+            </div>
           </div>
-          <div x-show="$store.game.petDevolved" class="text-xs text-red-500 mt-1">
+          <div x-show="$store.game.petDevolved" class="text-xs text-red-500 mt-1 text-center">
             😿 <span x-text="$store.profile.activeProfile?.pet?.name || 'Nora'"></span> devolved to
             <span x-text="PetSystem.getPetStageName($store.game.petDevolutionData?.newStage || 0)"></span>.
           </div>
-          <div x-show="$store.game.petDevolutionWarning && !$store.game.petDevolved" class="text-xs text-amber-600 mt-1"
+          <div x-show="$store.game.petDevolutionWarning && !$store.game.petDevolved" class="text-xs text-amber-600 mt-1 text-center"
                x-text="'⚠️ ' + ($store.profile.activeProfile?.pet?.name || 'Nora') + ' is ' + ($store.game.petDevolutionWarning?.mistakesRemaining || 1) + ' mistake' + (($store.game.petDevolutionWarning?.mistakesRemaining || 1) === 1 ? '' : 's') + ' away from devolving.'">
+          </div>
+        </div>
+
+        <!-- Hint Display Overlay -->
+        <div x-show="$store.game.showHint" x-cloak
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 transform scale-95"
+             x-transition:enter-end="opacity-100 transform scale-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 transform scale-100"
+             x-transition:leave-end="opacity-0 transform scale-95"
+             class="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-40"
+             @click.self="$store.game.closeHint()">
+          <div class="bg-white rounded-3xl shadow-2xl p-6 max-w-sm w-full border-4 border-purple-200 animate-bounce-in">
+            <div class="text-center">
+              <!-- Pet speaking -->
+              <div class="text-5xl mb-3" x-text="PetSystem.getPetEmoji($store.profile.activeProfile?.pet?.stage || 0)"></div>
+              <div class="text-lg font-bold text-purple-600 mb-4">
+                <span x-text="$store.profile.activeProfile?.pet?.name || 'Nora'"></span> says:
+              </div>
+
+              <!-- Dynamic Hint Content -->
+              <div x-data="{ hint: null }"
+                   x-init="hint = HintGenerator.generateHint($store.game.currentProblem)"
+                   x-effect="hint = HintGenerator.generateHint($store.game.currentProblem)">
+
+                <!-- Counting Hint (Addition with small numbers) -->
+                <template x-if="hint?.type === 'counting'">
+                  <div class="space-y-3">
+                    <div class="flex justify-center items-center gap-2 flex-wrap">
+                      <div class="flex gap-1 flex-wrap justify-center">
+                        <template x-for="i in hint.group1" :key="'g1-' + i">
+                          <span class="text-2xl">🔵</span>
+                        </template>
+                      </div>
+                      <span class="text-2xl text-purple-400 mx-2">+</span>
+                      <div class="flex gap-1 flex-wrap justify-center">
+                        <template x-for="i in hint.group2" :key="'g2-' + i">
+                          <span class="text-2xl">🟢</span>
+                        </template>
+                      </div>
+                    </div>
+                    <p class="text-gray-600" x-text="hint.instruction"></p>
+                  </div>
+                </template>
+
+                <!-- Take Away Hint (Subtraction with small numbers) -->
+                <template x-if="hint?.type === 'takeAway'">
+                  <div class="space-y-3">
+                    <div class="flex justify-center gap-1 flex-wrap">
+                      <template x-for="i in hint.total" :key="'t-' + i">
+                        <span class="text-2xl" :class="i <= hint.remove ? 'opacity-30 line-through' : ''">🔵</span>
+                      </template>
+                    </div>
+                    <p class="text-gray-600" x-text="hint.message"></p>
+                    <p class="text-purple-500 font-semibold" x-text="hint.instruction"></p>
+                  </div>
+                </template>
+
+                <!-- Number Line Hint -->
+                <template x-if="hint?.type === 'numberLine'">
+                  <div class="space-y-3">
+                    <div class="flex items-center justify-center gap-2 text-xl">
+                      <span class="font-bold text-purple-600" x-text="hint.start"></span>
+                      <span x-text="hint.direction === 'right' ? '→' : '←'"></span>
+                      <span class="text-gray-400" x-text="'jump ' + hint.jump"></span>
+                      <span x-text="hint.direction === 'right' ? '→' : '←'"></span>
+                      <span class="text-purple-400 font-bold">?</span>
+                    </div>
+                    <p class="text-gray-600" x-text="hint.message"></p>
+                  </div>
+                </template>
+
+                <!-- Array Hint (Multiplication) -->
+                <template x-if="hint?.type === 'array'">
+                  <div class="space-y-3">
+                    <div class="flex flex-col items-center gap-1">
+                      <template x-for="row in hint.rows" :key="'row-' + row">
+                        <div class="flex gap-1">
+                          <template x-for="col in hint.columns" :key="'col-' + col">
+                            <span class="text-lg">●</span>
+                          </template>
+                        </div>
+                      </template>
+                    </div>
+                    <p class="text-gray-600" x-text="hint.message"></p>
+                    <p class="text-purple-500 font-semibold" x-text="hint.instruction"></p>
+                  </div>
+                </template>
+
+                <!-- Skip Count Hint -->
+                <template x-if="hint?.type === 'skipCount'">
+                  <div class="space-y-3">
+                    <p class="text-gray-600" x-text="hint.message"></p>
+                    <p class="text-lg text-purple-600" x-text="hint.instruction"></p>
+                  </div>
+                </template>
+
+                <!-- Grouping Hint (Division) -->
+                <template x-if="hint?.type === 'grouping'">
+                  <div class="space-y-3">
+                    <div class="flex justify-center gap-2 flex-wrap">
+                      <template x-for="g in hint.groups" :key="'grp-' + g">
+                        <div class="border-2 border-purple-300 rounded-lg p-2 flex gap-1">
+                          <template x-for="i in hint.groupSize" :key="'item-' + i">
+                            <span class="text-sm">●</span>
+                          </template>
+                        </div>
+                      </template>
+                    </div>
+                    <p class="text-gray-600" x-text="hint.message"></p>
+                    <p class="text-purple-500 font-semibold" x-text="hint.instruction"></p>
+                  </div>
+                </template>
+
+                <!-- Reverse Multiply Hint (Division with larger numbers) -->
+                <template x-if="hint?.type === 'reverseMultiply'">
+                  <div class="space-y-3">
+                    <p class="text-gray-600" x-text="hint.message"></p>
+                    <p class="text-xl text-purple-600 font-bold" x-text="hint.instruction"></p>
+                  </div>
+                </template>
+
+                <!-- Fallback text hint -->
+                <template x-if="hint?.type === 'text'">
+                  <p class="text-gray-600" x-text="hint.message"></p>
+                </template>
+              </div>
+
+              <!-- Penalty Warning -->
+              <div class="mt-4 text-xs text-amber-600 bg-amber-50 rounded-lg p-2">
+                Stars reduced by 50% for this question
+              </div>
+
+              <!-- Close Button -->
+              <button @click="$store.game.closeHint()"
+                      class="mt-4 btn btn-primary w-full">
+                Got it! Let me try
+              </button>
+            </div>
           </div>
         </div>
 

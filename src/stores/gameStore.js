@@ -89,6 +89,10 @@ function createGameStore(Alpine) {
     // Milestone tracking (persisted)
     milestonesAchieved: Alpine.$persist([]).as('ezmath_game_milestonesAchieved'),
 
+    // Hint system state (NOT persisted - resets per problem)
+    hintUsed: false,
+    showHint: false,
+
     // Initialization flag
     _initialized: false,
 
@@ -215,6 +219,24 @@ function createGameStore(Alpine) {
       }
     },
 
+    // Hint system methods
+    requestHint() {
+      if (!this.currentProblem || this.hintUsed || this.showFeedback) return
+
+      this.hintUsed = true
+      this.showHint = true
+      sounds.hint()
+    },
+
+    closeHint() {
+      this.showHint = false
+    },
+
+    resetHintState() {
+      this.hintUsed = false
+      this.showHint = false
+    },
+
     awardProgressStars() {
       const unawardedStars = this.starsEarned - this.starsAwarded
       if (unawardedStars <= 0) return
@@ -310,6 +332,7 @@ function createGameStore(Alpine) {
       this.currentProblem = generateProblem(this.difficulty, this.operations)
       this.userAnswer = ''
       this.showFeedback = false
+      this.resetHintState()
       this.focusInput()
     },
 
@@ -398,7 +421,14 @@ function createGameStore(Alpine) {
       }
 
       const difficulty = this.currentProblem.difficulty || this.difficulty
-      return Math.round(5 * difficultyMultiplier[difficulty] * opMultiplier[this.currentProblem.operation])
+      let stars = Math.round(5 * difficultyMultiplier[difficulty] * opMultiplier[this.currentProblem.operation])
+
+      // Apply 50% penalty if hint was used
+      if (this.hintUsed) {
+        stars = Math.round(stars * 0.5)
+      }
+
+      return stars
     },
 
     startTimer() {
@@ -573,6 +603,7 @@ function createGameStore(Alpine) {
       }
       this.userAnswer = ''
       this.showFeedback = false
+      this.resetHintState()
       this.focusInput()
     },
 
@@ -673,6 +704,7 @@ function createGameStore(Alpine) {
       }
       this.userAnswer = ''
       this.showFeedback = false
+      this.resetHintState()
       this.focusInput()
     },
 
@@ -794,6 +826,7 @@ function createGameStore(Alpine) {
       }
       this.userAnswer = ''
       this.showFeedback = false
+      this.resetHintState()
       this.focusInput()
     },
 
@@ -872,6 +905,7 @@ function createGameStore(Alpine) {
       }
       this.userAnswer = ''
       this.showFeedback = false
+      this.resetHintState()
       this.focusInput()
     },
 
