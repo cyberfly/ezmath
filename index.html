@@ -523,7 +523,8 @@
 
     <!-- Game Screen -->
     <div x-show="$store.view.current === 'game'" x-cloak class="min-h-screen flex items-center justify-center p-4">
-      <div class="card max-w-lg w-full text-center">
+      <div class="card max-w-lg w-full text-center game-card"
+           :class="{ 'game-card--vertical-problem': $store.game.mode === 'tambah' || $store.game.mode === 'tolak' }">
         <!-- Game Header -->
         <div class="flex items-center justify-between gap-2 mb-4 flex-nowrap">
           <button @click="$store.view.goHome()" class="text-xl sm:text-2xl hover:scale-110 transition-transform shrink-0">✕</button>
@@ -642,7 +643,10 @@
         </div>
 
         <!-- Problem Display -->
-        <div class="py-8" :class="{ 'animate-shake': $store.game.showFeedback && $store.game.lastResult === 'incorrect' }">
+        <div class="py-8 problem-display"
+             x-ref="problemDisplay"
+             x-init="$store.game.registerProblem($refs.problemDisplay)"
+             :class="{ 'animate-shake': $store.game.showFeedback && $store.game.lastResult === 'incorrect' }">
           <div x-show="$store.game.mode === 'tambah' || $store.game.mode === 'tolak'"
                class="text-6xl font-bold mb-8 flex flex-col items-end mx-auto w-40 sm:w-48"
                :class="{
@@ -684,6 +688,7 @@
               x-model="$store.game.userAnswer"
               x-ref="answerInput"
               x-init="$store.game.registerInput($refs.answerInput)"
+              @focus="$store.game.scrollProblemIntoView()"
               @keyup.enter="
                 $store.game.mode === 'sifir' ? $store.game.submitSifirAnswer() :
                 ($store.game.mode === 'bahagi' ? $store.game.submitBahagiAnswer() :

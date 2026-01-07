@@ -18,6 +18,7 @@ function createGameStore(Alpine) {
     currentProblem: Alpine.$persist(null).as('ezmath_game_currentProblem'),
     userAnswer: '',
     inputElement: null, // Reference to the answer input element (NOT persisted)
+    problemElement: null, // Reference to the problem display element (NOT persisted)
 
     // Score tracking (persisted)
     score: Alpine.$persist(0).as('ezmath_game_score'),
@@ -177,11 +178,28 @@ function createGameStore(Alpine) {
       }
     },
 
+    registerProblem(element) {
+      this.problemElement = element
+    },
+
+    shouldAutoScrollProblem() {
+      if (this.mode !== 'tambah' && this.mode !== 'tolak') return false
+      return window.matchMedia && window.matchMedia('(max-width: 768px)').matches
+    },
+
+    scrollProblemIntoView() {
+      if (!this.problemElement || !this.shouldAutoScrollProblem()) return
+      setTimeout(() => {
+        this.problemElement.scrollIntoView({ block: 'start', behavior: 'smooth' })
+      }, 100)
+    },
+
     focusInput() {
       if (this.inputElement && !this.showFeedback && this.isPlaying) {
         // Use setTimeout to ensure it happens after DOM updates and outside any restricted context
         setTimeout(() => {
           this.inputElement?.focus()
+          this.scrollProblemIntoView()
         }, 100)
       }
     },
