@@ -45,8 +45,12 @@ function createViewStore(Alpine) {
       this.current = 'game'
     },
 
-    // Navigate back to menu without clearing game state
+    // Navigate back to menu and finalize active session
     goHome() {
+      const game = Alpine.store('game')
+      if (game?.isPlaying) {
+        game.endGame()
+      }
       this.current = 'menu'
     }
   }
